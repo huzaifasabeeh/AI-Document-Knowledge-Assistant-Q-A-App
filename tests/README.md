@@ -1,0 +1,1 @@
+Implement tests for R01–R09 from the requirements. Include unreadable PDFs, absent answers, conflicting sources, hostile document instructions, reset behavior and two simultaneous sessions. The current baseline evaluation lives in evaluation/. These application tests have not yet run.

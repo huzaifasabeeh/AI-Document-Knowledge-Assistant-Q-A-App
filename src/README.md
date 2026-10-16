@@ -1,0 +1,1 @@
+Implementation handoff: add ingestion, chunking, indexing, retrieval, answer generation and Streamlit UI in Week 2. Preserve filename, PDF page and session ID. No working app is claimed in Week 1. API keys belong in local environment variables, never in this package.

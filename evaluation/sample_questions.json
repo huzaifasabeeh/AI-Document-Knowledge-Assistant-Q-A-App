@@ -1,0 +1,110 @@
+[
+  {
+    "id": "S01",
+    "type": "answerable",
+    "question": "How many annual leave days are allowed?",
+    "expected_answer": "18 working days",
+    "source": "leave.txt",
+    "source_line": 2,
+    "evidence": "Annual leave entitlement is 18 working days per year."
+  },
+  {
+    "id": "S02",
+    "type": "answerable",
+    "question": "When must leave requests be submitted?",
+    "expected_answer": "5 working days before the start date",
+    "source": "leave.txt",
+    "source_line": 3,
+    "evidence": "Leave requests must be submitted 5 working days before the start date."
+  },
+  {
+    "id": "S03",
+    "type": "answerable",
+    "question": "Who approves leave requests?",
+    "expected_answer": "A line manager",
+    "source": "leave.txt",
+    "source_line": 4,
+    "evidence": "A line manager approves leave requests."
+  },
+  {
+    "id": "S04",
+    "type": "answerable",
+    "question": "What is the meal reimbursement limit?",
+    "expected_answer": "PKR 1500 per day",
+    "source": "expenses.txt",
+    "source_line": 2,
+    "evidence": "The meal reimbursement limit is PKR 1500 per day."
+  },
+  {
+    "id": "S05",
+    "type": "answerable",
+    "question": "When must expense claims be submitted?",
+    "expected_answer": "Within 14 calendar days",
+    "source": "expenses.txt",
+    "source_line": 3,
+    "evidence": "Expense claims must be submitted within 14 calendar days."
+  },
+  {
+    "id": "S06",
+    "type": "answerable",
+    "question": "What evidence is required for expense claims?",
+    "expected_answer": "Original receipts",
+    "source": "expenses.txt",
+    "source_line": 4,
+    "evidence": "Original receipts are required for expense claims."
+  },
+  {
+    "id": "S07",
+    "type": "answerable",
+    "question": "When does the support desk operate?",
+    "expected_answer": "Monday to Friday from 9 AM to 5 PM",
+    "source": "support.txt",
+    "source_line": 2,
+    "evidence": "The support desk operates Monday to Friday from 9 AM to 5 PM."
+  },
+  {
+    "id": "S08",
+    "type": "answerable",
+    "question": "What is the first response target for critical incidents?",
+    "expected_answer": "30 minutes",
+    "source": "support.txt",
+    "source_line": 3,
+    "evidence": "Critical incidents have a target first response of 30 minutes."
+  },
+  {
+    "id": "S09",
+    "type": "answerable",
+    "question": "What is required for password resets?",
+    "expected_answer": "Employee ID verification",
+    "source": "support.txt",
+    "source_line": 4,
+    "evidence": "Password resets require employee ID verification."
+  },
+  {
+    "id": "S10",
+    "type": "unanswerable",
+    "question": "What is the maternity leave entitlement?",
+    "expected_answer": "The supplied documents do not contain this information.",
+    "source": null,
+    "source_line": null,
+    "evidence": null
+  },
+  {
+    "id": "S11",
+    "type": "unanswerable",
+    "question": "What is the international airfare reimbursement limit?",
+    "expected_answer": "The supplied documents do not contain this information.",
+    "source": null,
+    "source_line": null,
+    "evidence": null
+  },
+  {
+    "id": "S12",
+    "type": "unanswerable",
+    "question": "What is the weekend support phone number?",
+    "expected_answer": "The supplied documents do not contain this information.",
+    "source": null,
+    "source_line": null,
+    "evidence": null
+  }
+]

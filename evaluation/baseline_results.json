@@ -1,0 +1,239 @@
+{
+  "method": "Token overlap ranking, top 3, sorted file and line order for ties",
+  "dataset": "Synthetic authored fixture; not an independent or client benchmark",
+  "python": "3.12.14",
+  "answerable_count": 9,
+  "hits_at_3": 9,
+  "hit_rate_at_3": 1.0,
+  "abstention": "Not implemented in this retrieval-only baseline",
+  "results": [
+    {
+      "id": "S01",
+      "top3": [
+        {
+          "source": "leave.txt",
+          "line": 2
+        },
+        {
+          "source": "leave.txt",
+          "line": 3
+        },
+        {
+          "source": "expenses.txt",
+          "line": 3
+        }
+      ],
+      "hit_at_3": true,
+      "retrieval_ms": 0.08525900011591148
+    },
+    {
+      "id": "S02",
+      "top3": [
+        {
+          "source": "leave.txt",
+          "line": 3
+        },
+        {
+          "source": "leave.txt",
+          "line": 4
+        },
+        {
+          "source": "expenses.txt",
+          "line": 3
+        }
+      ],
+      "hit_at_3": true,
+      "retrieval_ms": 0.03920899985132564
+    },
+    {
+      "id": "S03",
+      "top3": [
+        {
+          "source": "leave.txt",
+          "line": 4
+        },
+        {
+          "source": "leave.txt",
+          "line": 3
+        },
+        {
+          "source": "leave.txt",
+          "line": 2
+        }
+      ],
+      "hit_at_3": true,
+      "retrieval_ms": 0.03092599990850431
+    },
+    {
+      "id": "S04",
+      "top3": [
+        {
+          "source": "expenses.txt",
+          "line": 2
+        },
+        {
+          "source": "expenses.txt",
+          "line": 3
+        },
+        {
+          "source": "expenses.txt",
+          "line": 4
+        }
+      ],
+      "hit_at_3": true,
+      "retrieval_ms": 0.032778999866422964
+    },
+    {
+      "id": "S05",
+      "top3": [
+        {
+          "source": "expenses.txt",
+          "line": 3
+        },
+        {
+          "source": "expenses.txt",
+          "line": 4
+        },
+        {
+          "source": "leave.txt",
+          "line": 3
+        }
+      ],
+      "hit_at_3": true,
+      "retrieval_ms": 0.032228999998551444
+    },
+    {
+      "id": "S06",
+      "top3": [
+        {
+          "source": "expenses.txt",
+          "line": 4
+        },
+        {
+          "source": "expenses.txt",
+          "line": 3
+        },
+        {
+          "source": "expenses.txt",
+          "line": 2
+        }
+      ],
+      "hit_at_3": true,
+      "retrieval_ms": 0.03338000010444375
+    },
+    {
+      "id": "S07",
+      "top3": [
+        {
+          "source": "support.txt",
+          "line": 2
+        },
+        {
+          "source": "expenses.txt",
+          "line": 2
+        },
+        {
+          "source": "expenses.txt",
+          "line": 3
+        }
+      ],
+      "hit_at_3": true,
+      "retrieval_ms": 0.03170800005136698
+    },
+    {
+      "id": "S08",
+      "top3": [
+        {
+          "source": "support.txt",
+          "line": 3
+        },
+        {
+          "source": "expenses.txt",
+          "line": 2
+        },
+        {
+          "source": "expenses.txt",
+          "line": 3
+        }
+      ],
+      "hit_at_3": true,
+      "retrieval_ms": 0.03564400003597257
+    },
+    {
+      "id": "S09",
+      "top3": [
+        {
+          "source": "support.txt",
+          "line": 4
+        },
+        {
+          "source": "expenses.txt",
+          "line": 4
+        },
+        {
+          "source": "expenses.txt",
+          "line": 2
+        }
+      ],
+      "hit_at_3": true,
+      "retrieval_ms": 0.081934000036199
+    },
+    {
+      "id": "S10",
+      "top3": [
+        {
+          "source": "leave.txt",
+          "line": 2
+        },
+        {
+          "source": "leave.txt",
+          "line": 3
+        },
+        {
+          "source": "leave.txt",
+          "line": 4
+        }
+      ],
+      "hit_at_3": null,
+      "retrieval_ms": 0.030825999829176
+    },
+    {
+      "id": "S11",
+      "top3": [
+        {
+          "source": "expenses.txt",
+          "line": 2
+        },
+        {
+          "source": "expenses.txt",
+          "line": 3
+        },
+        {
+          "source": "expenses.txt",
+          "line": 4
+        }
+      ],
+      "hit_at_3": null,
+      "retrieval_ms": 0.03203799997208989
+    },
+    {
+      "id": "S12",
+      "top3": [
+        {
+          "source": "support.txt",
+          "line": 2
+        },
+        {
+          "source": "expenses.txt",
+          "line": 2
+        },
+        {
+          "source": "expenses.txt",
+          "line": 3
+        }
+      ],
+      "hit_at_3": null,
+      "retrieval_ms": 0.08198399996217631
+    }
+  ]
+}

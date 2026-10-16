@@ -1,0 +1,26 @@
+# Secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Python and editor files
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+Thumbs.db
+~$*
+
+# Real user documents and session artifacts
+uploads/
+data/private/
+data/uploads/
+chroma_db/
+indexes/
+logs/
+
+# Generated inspection output
+*.inspect.ndjson
