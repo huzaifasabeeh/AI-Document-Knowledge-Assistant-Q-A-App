@@ -1,0 +1,28 @@
+name: Sync task status to Notion
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: notion-status-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Validate task mapping
+        run: python3 scripts/sync_notion.py --validate-only
+      - name: Test sync behavior
+        run: python3 -m unittest discover -s tests -p test_notion_sync.py
+      - name: Sync explicit task statuses
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: python3 scripts/sync_notion.py
