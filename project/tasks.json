@@ -1,0 +1,77 @@
+{
+  "data_source_id": "dd58170d-c1ca-4b6c-a26b-3b38e67fff7c",
+  "tasks": [
+    {
+      "name": "Integrate Streamlit and run pilot evaluation",
+      "page_id": "3fbfe7abcf1d810fb60be2557902fc2f",
+      "status": "Planned",
+      "managed": true
+    },
+    {
+      "name": "Validate isolation and error handling",
+      "page_id": "3fbfe7abcf1d8117ad7cee5ed4803c7e",
+      "status": "Planned",
+      "managed": true
+    },
+    {
+      "name": "Build RAG prototype",
+      "page_id": "3fbfe7abcf1d81269a03cf4f76e0e14d",
+      "status": "Planned",
+      "managed": true
+    },
+    {
+      "name": "Define scope and requirements",
+      "page_id": "3fbfe7abcf1d812c8050d02ff5a39b8c",
+      "status": "Completed",
+      "managed": true
+    },
+    {
+      "name": "Prepare baseline audit and KPI protocol",
+      "page_id": "3fbfe7abcf1d812e9251fbb34124c4cb",
+      "status": "Completed",
+      "managed": true
+    },
+    {
+      "name": "Publish Week 1 files to GitHub",
+      "page_id": "3fbfe7abcf1d8143bd27c549faa0537e",
+      "status": "Completed",
+      "managed": true
+    },
+    {
+      "name": "Submit Week 1 repository link",
+      "page_id": "3fbfe7abcf1d8145a347f7cff037a818",
+      "status": "Planned",
+      "managed": false
+    },
+    {
+      "name": "Deploy and prepare final handoff",
+      "page_id": "3fbfe7abcf1d81578babfbcb95731787",
+      "status": "Planned",
+      "managed": true
+    },
+    {
+      "name": "Obtain reviewer scope approval",
+      "page_id": "3fbfe7abcf1d815c98f6fa0e7de97aa2",
+      "status": "Pending review",
+      "managed": false
+    },
+    {
+      "name": "Prepare sample fixtures and run retrieval baseline",
+      "page_id": "3fbfe7abcf1d8197b781c0e1c59c6646",
+      "status": "Completed",
+      "managed": true
+    },
+    {
+      "name": "Prepare report and master tracker",
+      "page_id": "3fbfe7abcf1d81aea13de52ee7159143",
+      "status": "Completed",
+      "managed": true
+    },
+    {
+      "name": "Build PDF extraction and metadata pipeline",
+      "page_id": "3fbfe7abcf1d81f592afdb80265a552a",
+      "status": "Planned",
+      "managed": true
+    }
+  ]
+}
