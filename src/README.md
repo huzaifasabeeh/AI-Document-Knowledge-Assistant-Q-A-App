@@ -1,1 +1,3 @@
-Implementation handoff: add ingestion, chunking, indexing, retrieval, answer generation and Streamlit UI in Week 2. Preserve filename, PDF page and session ID. No working app is claimed in Week 1. API keys belong in local environment variables, never in this package.
+# Implementation
+
+`knowledge_assistant/core.py` contains PDF validation, page-preserving chunking, session-scoped Chroma retrieval, structured answer validation and OpenAI adapters. The root `app.py` provides a basic Streamlit interface. See docs/08_week2_workflow.md for operation and limitations.

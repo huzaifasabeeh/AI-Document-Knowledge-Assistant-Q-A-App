@@ -1,3 +1,17 @@
+# Week 2 prototype update
+
+The repository now includes a Python/Streamlit document Q&A prototype with PDF extraction, per-page chunking, session-scoped Chroma retrieval and an OpenAI structured-answer integration. See [setup and workflow](docs/08_week2_workflow.md) and [test log](docs/09_week2_test_log.md). The extraction pipeline is locally validated; live OpenAI answer quality remains unverified. API credentials are required to index documents and generate answers.
+
+Run `pip install -r requirements-lock.txt`, configure `OPENAI_API_KEY` in your environment, then run `streamlit run app.py`. Run offline checks with `python -m pytest -q`.
+
+GitHub-to-Notion task statuses are maintained in `project/tasks.json`. Automatic sync still requires the separate `NOTION_TOKEN` repository secret and tracker access; see [sync setup](docs/07_notion_sync_setup.md). Completion of a push is not evidence that either provider integration succeeded.
+
+---
+
+## Archived Week 1 submission
+
+The following section is preserved as the Week 1 snapshot. Statements about not-yet-implemented features describe that earlier submission; the update above is the current implementation status.
+
 # AI Document Knowledge Assistant and Q&A App
 
 **Week 1 submission — Scope Definition and Baseline Analysis**  
@@ -87,3 +101,4 @@ Do not commit API keys, real customer uploads, personal data or generated sessio
 Implement PDF extraction with page metadata, chunking, embeddings, session-scoped indexing, retrieval and grounded answers. Then add the Streamlit upload-and-chat interface and validate error handling, source references and isolation.
 
 Official references and access dates are included in the report and baseline audit. This repository is the Week 1 submission evidence, not a deployed application.
+

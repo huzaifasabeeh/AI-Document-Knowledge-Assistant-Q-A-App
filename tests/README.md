@@ -1,1 +1,3 @@
-Implement tests for R01–R09 from the requirements. Include unreadable PDFs, absent answers, conflicting sources, hostile document instructions, reset behavior and two simultaneous sessions. The current baseline evaluation lives in evaluation/. These application tests have not yet run.
+# Tests
+
+Run `python -m pytest -q` from the repository root after installing requirements-lock.txt. Tests are offline and make no paid OpenAI calls. See docs/09_week2_test_log.md for evidence boundaries. Optional live provider smoke: `python -m scripts.live_smoke` after setting OPENAI_API_KEY.

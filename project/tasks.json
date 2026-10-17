@@ -16,7 +16,7 @@
     {
       "name": "Build RAG prototype",
       "page_id": "3fbfe7abcf1d81269a03cf4f76e0e14d",
-      "status": "Planned",
+      "status": "In progress",
       "managed": true
     },
     {
@@ -70,7 +70,7 @@
     {
       "name": "Build PDF extraction and metadata pipeline",
       "page_id": "3fbfe7abcf1d81f592afdb80265a552a",
-      "status": "Planned",
+      "status": "Completed",
       "managed": true
     }
   ]
