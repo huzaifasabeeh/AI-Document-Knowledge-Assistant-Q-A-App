@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from io import BytesIO
 import json
+import logging
 from pathlib import PurePosixPath
 from uuid import uuid4
 
@@ -89,15 +90,22 @@ class Assistant:
                             client=chromadb.EphemeralClient(), embedding_function=embeddings)
         self.model = answer_model
         self.ready = False
+        self._closed = False
 
     def ingest(self, uploads):
+        if self._closed:
+            raise InputError('This session is closed. Create a new assistant before indexing.')
         if self.ready:
             raise InputError('Reset before indexing a new document set.')
         chunks = chunk(extract(uploads, self.session_id))
         try:
             self.store.add_documents(chunks)
         except Exception:
-            self.close()
+            try:
+                self.close()
+            except Exception:
+                # Preserve the indexing failure, without logging document text or credentials.
+                logging.getLogger(__name__).warning('Index cleanup failed; retry cleanup or restart the server.')
             raise
         self.ready = True
         return len(chunks)
@@ -126,8 +134,11 @@ class Assistant:
         return answer, sources
 
     def close(self):
-        self.store.delete_collection()
+        """Delete once; allow retry if deletion itself fails."""
         self.ready = False
+        if not self._closed:
+            self.store.delete_collection()
+            self._closed = True
 
 
 def openai_assistant():

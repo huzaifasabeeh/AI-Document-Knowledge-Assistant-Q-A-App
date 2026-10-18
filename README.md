@@ -1,5 +1,11 @@
 # Week 2 prototype update
 
+Maintenance checkpoint: repeat-safe cleanup, binary PDF checkout protection and
+strict sample-PDF regression checks are implemented. The offline suite now has
+26 passing tests on Linux. Windows previously passed the original 18 tests;
+the new Windows rerun is pending. Live validation is blocked by unavailable API
+credits. See [results and Windows next steps](docs/10_week2_live_test_results.md).
+
 The repository now includes a Python/Streamlit document Q&A prototype with PDF extraction, per-page chunking, session-scoped Chroma retrieval and an OpenAI structured-answer integration. See [setup and workflow](docs/08_week2_workflow.md) and [test log](docs/09_week2_test_log.md). The extraction pipeline is locally validated; live OpenAI answer quality remains unverified. API credentials are required to index documents and generate answers.
 
 Run `pip install -r requirements-lock.txt`, configure `OPENAI_API_KEY` in your environment, then run `streamlit run app.py`. Run offline checks with `python -m pytest -q`.

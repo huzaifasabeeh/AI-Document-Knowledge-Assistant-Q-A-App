@@ -1,6 +1,7 @@
 """Generate synthetic development fixtures; requires requirements-dev.txt."""
 from pathlib import Path
 from reportlab.pdfgen.canvas import Canvas
+from pypdf import PdfReader
 
 root = Path(__file__).resolve().parents[1] / 'data' / 'sample_pdfs'
 root.mkdir(parents=True, exist_ok=True)
@@ -16,4 +17,9 @@ for name, pages in fixtures.items():
         canvas.drawString(40, 750, text)
         canvas.showPage()
     canvas.save()
+    # Check real byte offsets and page text before reporting generation success.
+    reader = PdfReader(root / name, strict=True)
+    assert len(reader.pages) == len(pages)
+    for page, expected in zip(reader.pages, pages):
+        assert expected in page.extract_text()
 print(f'Generated {len(fixtures)} synthetic PDFs in {root}')
