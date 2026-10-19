@@ -121,3 +121,51 @@ def test_chat_renders_sources_and_keeps_evidence_out_of_history():
     app.button(key='reset').click().run()
     assert app.session_state['messages'] == []
     assert app.chat_input[0].disabled
+
+
+def test_preview_clears_when_same_filename_content_changes(monkeypatch):
+    file = Mock()
+    file.name = 'leave.pdf'
+    file.getvalue.return_value = (APP.parent / 'data/sample_pdfs/leave.pdf').read_bytes()
+    monkeypatch.setattr(st, 'file_uploader', lambda *a, **kw: [file])
+    app = AppTest.from_file(APP).run()
+    app.button(key='preview_pages').click().run()
+    assert app.session_state['preview']
+    file.getvalue.return_value = b'not a PDF'
+    app.run()
+    assert not app.session_state['preview']
+    app.button(key='preview_pages').click().run()
+    assert app.error
+    assert not app.exception
+
+
+def test_clear_chat_keeps_index_and_removes_followup_context():
+    engine = Mock()
+    engine.ask.return_value = (Answer(status='not_found', claims=[]), {})
+    app = AppTest.from_file(APP)
+    app.session_state['assistant'] = engine
+    app.session_state['documents'] = ['leave.pdf']
+    app.session_state['consent'] = True
+    app.session_state['messages'] = [
+        {'role': 'user', 'content': 'Old question'},
+        {'role': 'assistant', 'content': 'Old answer', 'sources': []}]
+    app.run()
+    app.button(key='clear_chat').click().run()
+    assert not app.exception
+    assert app.session_state['messages'] == []
+    assert app.session_state['documents'] == ['leave.pdf']
+    engine.close.assert_not_called()
+    app.chat_input[0].set_value('New question').run()
+    assert engine.ask.call_args.args[1] == []
+
+
+def test_export_includes_exact_evidence_without_mutating_history():
+    from copy import deepcopy
+    from src.knowledge_assistant.presentation import export_chat
+    messages = [{'role': 'assistant', 'content': '20 days.', 'sources': [
+        {'filename': 'leave.pdf', 'page': 1, 'text': 'Employees receive 20 days.'}]}]
+    before = deepcopy(messages)
+    text = export_chat(messages)
+    assert 'leave.pdf | PDF page 1' in text
+    assert 'Employees receive 20 days.' in text
+    assert messages == before

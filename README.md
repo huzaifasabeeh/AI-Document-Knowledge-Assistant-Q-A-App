@@ -110,3 +110,13 @@ Implement PDF extraction with page metadata, chunking, embeddings, session-scope
 
 Official references and access dates are included in the report and baseline audit. This repository is the Week 1 submission evidence, not a deployed application.
 
+
+### User guide and final evaluation preparation
+
+- [User guide](docs/12_user_guide.md): free preview, AI flow, chat clearing,
+  local conversation downloads and troubleshooting.
+- [Release and evaluation runbook](docs/13_release_and_evaluation.md): deferred
+  manual checks and deployment prerequisites; no deployment is claimed.
+- [PDF-specific evaluation cases](evaluation/pdf_questions.json): expected
+  answers and physical page evidence for the PDF corpus. The original text
+  baseline questions remain a separate benchmark.

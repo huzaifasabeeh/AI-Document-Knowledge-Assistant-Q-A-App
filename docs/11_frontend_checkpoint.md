@@ -66,3 +66,32 @@ A configured key only means it is present, not that it is valid/funded.
 The two Week 3 tasks (Streamlit/pilot and isolation/error handling) are now
 In progress in project/tasks.json. Build RAG prototype stays In progress.
 No reviewer or submission status has been changed.
+
+## Development continuation — 19 October 2026
+
+The user requested pausing step-by-step manual testing until development is
+ready for a final acceptance session. User-reported checks completed so far:
+reset; two-PDF preview with four pages and correct filenames/page numbers;
+invalid PDF rejection without crash; successful preview after invalid-file
+recovery. Consent-off manual testing was paused before confirmation. These are
+user reports, not independently observed browser tests. The user's "hogaya"
+after the update instructions does not establish an explicit 35-pass Windows
+result; retain that distinction.
+
+Added automatic preview invalidation when upload names/content change, clear
+chat while retaining the document index, and local plain-text conversation
+export with supporting passages. Response counter now says "Responses received"
+because not-found/conflict responses are not necessarily answered questions.
+
+Prepared a user guide and release/evaluation runbook. Nine PDF evaluation cases
+are separate from the Week 1 text baseline, whose numerical answers differ.
+All live evaluation results remain Not run; manual consent check, live AI,
+reviewer approval and deployment remain pending.
+
+Continuation validation: **39 offline tests passed** on Linux/Python 3.12,
+including stale-preview invalidation, clear-chat context removal, export
+fidelity and PDF evaluation evidence validation. `pip check` passed. The first
+run had 38 passes and one environment failure because the runner's SOCKS proxy
+needed `socksio`; installing that runner-only dependency resolved the failure.
+Project runtime requirements were not changed. No paid inference/embedding
+requests were made. Updated Windows/browser checks remain deferred.

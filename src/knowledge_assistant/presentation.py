@@ -33,3 +33,16 @@ def format_answer(answer, sources):
                 seen.add(key)
         lines.append(f'{claim.text}\nSources: {"; ".join(refs)}')
     return '\n\n'.join(lines), evidence
+
+
+def export_chat(messages):
+    """Export displayed answers and evidence locally, without another model call."""
+    lines = ['Document Knowledge Assistant — chat export',
+             'AI output: verify each claim against the cited PDF pages.', '']
+    for message in messages:
+        lines.extend([message['role'].upper(), message['content']])
+        for source in message.get('sources', []):
+            lines.extend([f"Supporting passage: {source['filename']} | PDF page {source['page']}",
+                          source['text']])
+        lines.append('')
+    return '\n'.join(lines)

@@ -1,12 +1,13 @@
 """Streamlit document workspace. Run with: streamlit run app.py."""
 import os
+from hashlib import sha256
 import streamlit as st
 from src.knowledge_assistant.core import InputError, Upload, extract, openai_assistant
-from src.knowledge_assistant.presentation import format_answer, provider_error
+from src.knowledge_assistant.presentation import format_answer, provider_error, export_chat
 
 st.set_page_config(page_title='Document Knowledge Assistant', page_icon='📚', layout='wide')
 for key, default in [('messages', []), ('documents', []), ('passage_count', 0),
-                     ('preview', []), ('upload_key', 0), ('cleanup_blocked', False)]:
+                     ('preview', []), ('preview_signature', None), ('upload_key', 0), ('cleanup_blocked', False)]:
     if key not in st.session_state:
         st.session_state[key] = default
 
@@ -27,6 +28,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.session_state.documents = []
         st.session_state.preview = []
+        st.session_state.preview_signature = None
         st.session_state.passage_count = 0
         st.session_state.cleanup_blocked = False
         st.session_state.upload_key += 1
@@ -37,6 +39,9 @@ with st.sidebar:
     files = st.file_uploader('Upload PDFs', type=['pdf'], accept_multiple_files=True,
         max_upload_size=10, disabled=active or blocked,
         key=f'uploads-{st.session_state.upload_key}')
+    selection_signature = tuple((f.name, sha256(f.getvalue()).hexdigest()) for f in (files or []))
+    if selection_signature != st.session_state.preview_signature:
+        st.session_state.preview = []
     if active:
         st.caption('Reset before changing the indexed document set.')
     if files and not active:
@@ -48,6 +53,7 @@ with st.sidebar:
         st.session_state.preview = []
         try:
             pages = extract([Upload(f.name, f.getvalue()) for f in files], 'preview')
+            st.session_state.preview_signature = selection_signature
             st.session_state.preview = [
                 {'filename': p.metadata['filename'], 'page': p.metadata['page'],
                  'text': p.page_content[:1500]} for p in pages]
@@ -72,6 +78,7 @@ with st.sidebar:
             st.session_state.assistant = engine
             st.session_state.documents = [f.name for f in files]
             st.session_state.passage_count = count
+            st.session_state.preview_signature = selection_signature
             st.session_state.preview = []
             st.rerun()
         except Exception as exc:
@@ -95,7 +102,7 @@ blocked = st.session_state.cleanup_blocked
 cols = st.columns(3)
 cols[0].metric('Indexed documents', len(st.session_state.documents))
 cols[1].metric('Searchable passages', st.session_state.passage_count)
-cols[2].metric('Questions answered', len(st.session_state.messages) // 2)
+cols[2].metric('Responses received', len(st.session_state.messages) // 2)
 if blocked:
     st.error('Session paused: reset or restart the server to finish cleanup.')
 elif active and consent:
@@ -107,10 +114,20 @@ else:
 
 if st.session_state.preview:
     with st.expander('Local page preview — not indexed', expanded=True):
-        st.caption('Snapshot from your last preview click. Click Preview again after changing files. Text is limited to 1,500 characters per page.')
+        st.caption('Text is limited to 1,500 characters per page. Changing selected files clears this preview; preview the new selection again.')
         for page in st.session_state.preview:
             st.caption(f'{page["filename"]} · PDF page {page["page"]}')
             st.text(page['text'])
+
+if st.session_state.messages:
+    clear_col, download_col = st.columns(2)
+    if clear_col.button('Clear chat only', key='clear_chat', width='stretch', disabled=blocked):
+        st.session_state.messages = []
+        st.rerun()
+    download_col.download_button('Download chat and sources',
+        data=export_chat(st.session_state.messages), file_name='document-chat.txt',
+        mime='text/plain', on_click='ignore', width='stretch')
+    st.caption('Clear chat keeps documents indexed. Downloaded copies remain on your device after reset.')
 
 if not st.session_state.messages:
     st.subheader('Find answers with page references')
