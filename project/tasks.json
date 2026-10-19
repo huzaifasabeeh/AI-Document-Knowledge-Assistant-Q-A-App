@@ -4,13 +4,13 @@
     {
       "name": "Integrate Streamlit and run pilot evaluation",
       "page_id": "3fbfe7abcf1d810fb60be2557902fc2f",
-      "status": "Planned",
+      "status": "In progress",
       "managed": true
     },
     {
       "name": "Validate isolation and error handling",
       "page_id": "3fbfe7abcf1d8117ad7cee5ed4803c7e",
-      "status": "Planned",
+      "status": "In progress",
       "managed": true
     },
     {

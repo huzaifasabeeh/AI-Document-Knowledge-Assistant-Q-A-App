@@ -1,6 +1,8 @@
-# Week 2 prototype update
+# Prototype progress
 
-Maintenance checkpoint: repeat-safe cleanup, binary PDF checkout protection and
+Week 3 frontend work has started: document sidebar, local page preview without API calls, status metrics, source excerpts and readable provider errors. See [frontend checkpoint and run guide](docs/11_frontend_checkpoint.md). Live AI validation and pilot evaluation remain pending.
+
+Previous maintenance checkpoint: repeat-safe cleanup, binary PDF checkout protection and
 strict sample-PDF regression checks are implemented. The offline suite now has
 26 passing tests on Linux. Windows previously passed the original 18 tests;
 the new Windows rerun is pending. Live validation is blocked by unavailable API
