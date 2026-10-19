@@ -44,6 +44,14 @@ now. Repeat essential flows against the release candidate at final acceptance.
 
 ## Deployment preparation (not a deployment)
 
+Before launching, run `python scripts/preflight.py` from the repository root.
+This checks installed direct dependency versions and reports whether the server
+environment contains an API key without printing its value or calling a provider.
+For AI mode, use `python scripts/preflight.py --require-api-key` to also fail when
+the key is absent. A successful prerequisite check does not establish available
+credits, model access, successful app startup or acceptance-test completion.
+The app does not automatically load `.env`; configure the process environment.
+
 1. Select an approved private hosting target and API budget. Do not expose this
    prototype publicly: authentication, session expiry and automatic lifecycle
    cleanup are not implemented.
