@@ -1,5 +1,12 @@
 # Prototype progress
 
+Deployment preparation now includes a no-network prerequisite check, a local
+launcher (`python scripts/start.py`) and optional Docker packaging. See the
+[private deployment and handoff guide](docs/14_deployment_handoff.md).
+The container has not been built or deployed. Final manual and live AI testing
+is deferred until the development candidate is ready; no release completion
+is claimed. The existing Streamlit UI remains the selected frontend.
+
 Week 3 frontend work has started: document sidebar, local page preview without API calls, status metrics, source excerpts and readable provider errors. See [frontend checkpoint and run guide](docs/11_frontend_checkpoint.md). Live AI validation and pilot evaluation remain pending.
 
 Previous maintenance checkpoint: repeat-safe cleanup, binary PDF checkout protection and
