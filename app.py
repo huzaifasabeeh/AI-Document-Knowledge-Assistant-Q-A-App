@@ -6,6 +6,8 @@ from src.knowledge_assistant.core import InputError, Upload, extract, openai_ass
 from src.knowledge_assistant.presentation import format_answer, provider_error, export_chat
 
 st.set_page_config(page_title='Document Knowledge Assistant', page_icon='📚', layout='wide')
+from src.knowledge_assistant.auth_ui import require_login
+require_login()
 for key, default in [('messages', []), ('documents', []), ('passage_count', 0),
                      ('preview', []), ('preview_signature', None), ('upload_key', 0), ('cleanup_blocked', False)]:
     if key not in st.session_state:

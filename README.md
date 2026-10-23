@@ -1,3 +1,10 @@
+# Account access
+
+Signup, login and logout now gate the workspace through Supabase Auth. Configure
+`SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` before deploying this candidate.
+[Setup, scope and live acceptance](docs/16_account_auth.md). Document persistence
+and saved chat history are deferred. Live authentication has not yet been verified.
+
 # Prototype progress
 
 Week 3 frontend work has started: document sidebar, local page preview without API calls, status metrics, source excerpts and readable provider errors. See [frontend checkpoint and run guide](docs/11_frontend_checkpoint.md). Live AI validation and pilot evaluation remain pending.
