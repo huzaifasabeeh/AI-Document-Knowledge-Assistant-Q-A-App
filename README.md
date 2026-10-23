@@ -1,5 +1,27 @@
 # Prototype progress
 
+The preview demo is deployed on [Streamlit Community Cloud](https://ai-document-knowledge-assistant-q-a-app-f6ozauylzvgbsqda24mnfs.streamlit.app/).
+Hosted startup was observed on 21 October; the owner subsequently reported
+successful use without a visible error. This is not final AI acceptance.
+See [hosted verification and remaining work](docs/15_hosted_status.md).
+
+Prepare a separate final evaluation worksheet without API calls:
+
+```sh
+python -m scripts.prepare_evaluation --output evaluation/review_candidate.json
+```
+
+The command preserves the nine PDF cases and their expected evidence, records
+the candidate commit, leaves every result unrun, and refuses to overwrite an
+existing review. Record results only after live testing is authorized.
+
+Deployment preparation now includes a no-network prerequisite check, a local
+launcher (`python scripts/start.py`) and optional Docker packaging. See the
+[private deployment and handoff guide](docs/14_deployment_handoff.md).
+The container has not been built or deployed. Detailed final acceptance and live AI testing
+remain pending; no release completion
+is claimed. The existing Streamlit UI remains the selected frontend.
+
 Week 3 frontend work has started: document sidebar, local page preview without API calls, status metrics, source excerpts and readable provider errors. See [frontend checkpoint and run guide](docs/11_frontend_checkpoint.md). Live AI validation and pilot evaluation remain pending.
 
 Previous maintenance checkpoint: repeat-safe cleanup, binary PDF checkout protection and
