@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 from streamlit.testing.v1 import AppTest
 
@@ -17,3 +18,9 @@ def test_openai_client_configuration_without_network(monkeypatch):
     monkeypatch.setenv('OPENAI_API_KEY', 'sk-test-not-a-real-key')
     engine = openai_assistant()
     engine.close()
+
+
+@pytest.fixture(autouse=True)
+def authenticated_workspace_for_existing_flow_tests(monkeypatch):
+    # These tests exercise document UI; account gate is tested in test_auth.py.
+    monkeypatch.setattr('src.knowledge_assistant.auth_ui.require_login', lambda: 'test-user')

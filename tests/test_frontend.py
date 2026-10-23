@@ -169,3 +169,9 @@ def test_export_includes_exact_evidence_without_mutating_history():
     assert 'leave.pdf | PDF page 1' in text
     assert 'Employees receive 20 days.' in text
     assert messages == before
+
+
+@pytest.fixture(autouse=True)
+def authenticated_workspace_for_existing_flow_tests(monkeypatch):
+    # These tests exercise document UI; account gate is tested in test_auth.py.
+    monkeypatch.setattr('src.knowledge_assistant.auth_ui.require_login', lambda: 'test-user')
