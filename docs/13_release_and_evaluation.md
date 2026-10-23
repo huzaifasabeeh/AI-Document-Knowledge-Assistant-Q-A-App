@@ -2,6 +2,15 @@
 
 ## Current boundary
 
+Update, 23 October 2026: Streamlit hosting and startup are confirmed for the
+preview demo; owner reports successful use without visible errors. Detailed
+acceptance and paid AI evaluation remain pending. See document 15.
+Generate the nine-case review worksheet with
+`python -m scripts.prepare_evaluation --output evaluation/review_candidate.json`.
+No provider is contacted; blank results are not passes.
+
+Earlier checkpoint:
+
 Development may proceed while detailed manual testing is paused, as requested
 on 19 October 2026. Offline tests remain part of each change. No live model
 result, deployment or client approval is claimed by this document.
@@ -43,6 +52,14 @@ crash, and subsequent valid-file recovery need not be repeated step by step
 now. Repeat essential flows against the release candidate at final acceptance.
 
 ## Deployment preparation (not a deployment)
+
+Before launching, run `python scripts/preflight.py` from the repository root.
+This checks installed direct dependency versions and reports whether the server
+environment contains an API key without printing its value or calling a provider.
+For AI mode, use `python scripts/preflight.py --require-api-key` to also fail when
+the key is absent. A successful prerequisite check does not establish available
+credits, model access, successful app startup or acceptance-test completion.
+The app does not automatically load `.env`; configure the process environment.
 
 1. Select an approved private hosting target and API budget. Do not expose this
    prototype publicly: authentication, session expiry and automatic lifecycle
