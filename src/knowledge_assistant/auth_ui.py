@@ -56,7 +56,7 @@ def require_login():
         return user['id']
 
     st.title('Welcome to Document Knowledge Assistant')
-    st.caption('Sign in to work with your documents. Documents and chats are temporary in this version.')
+    st.caption('Sign in to work with your documents. Save a workspace to keep PDFs and chat history in your account.')
     notice = st.session_state.pop('auth_notice', None)
     if notice:
         st.info(notice)
