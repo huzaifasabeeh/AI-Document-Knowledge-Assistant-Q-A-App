@@ -76,13 +76,13 @@
     {
       "name": "Add signup, login and logout",
       "page_id": "402fe7abcf1d813baa3fdf4274cb312c",
-      "status": "In progress",
+      "status": "Completed",
       "managed": true
     },
     {
       "name": "Add persistent user documents and chat history",
       "page_id": "402fe7abcf1d81fc9103dacf26983df9",
-      "status": "Planned",
+      "status": "In progress",
       "managed": true
     }
   ]
