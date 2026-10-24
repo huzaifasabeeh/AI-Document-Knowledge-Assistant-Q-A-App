@@ -28,10 +28,11 @@ def saved_workspace_controls(uploads, active, blocked):
                 st.error(str(exc))
         rows = st.session_state.get('saved_workspace_list', [])
         if rows:
-            titles = {r['id']: r['title'] + ' · ' + r['created_at'][:19] for r in rows}
+            titles = {r['id']: r['title'] + ' · ' + r['created_at'][:19] + ' · ' + r['status'] for r in rows}
             chosen = st.selectbox('Choose saved workspace', list(titles), format_func=titles.get)
+            selected = next(r for r in rows if r['id'] == chosen)
             st.caption('Reset the current session before opening a different workspace. Save any unsaved work first.')
-            if st.button('Open saved workspace', disabled=active or blocked or bool(st.session_state.messages)):
+            if st.button('Open saved workspace', disabled=active or blocked or bool(st.session_state.messages) or selected['status'] != 'ready'):
                 try:
                     restored, messages = workspace_store().load(chosen)
                     st.session_state.restored_uploads = restored
@@ -43,6 +44,18 @@ def saved_workspace_controls(uploads, active, blocked):
                     st.rerun()
                 except (PersistenceError, InputError) as exc:
                     st.error(str(exc))
+            st.caption('Delete permanently removes this saved workspace, its PDFs and chat. Close other tabs using it first. Incomplete saves can also be removed here.')
+            confirm = st.checkbox('Permanently delete: ' + selected['title'], key='delete-confirm-' + chosen)
+            if st.button('Delete saved workspace', disabled=not confirm or blocked):
+                try:
+                    workspace_store().delete(chosen)
+                    if st.session_state.get('saved_workspace_id') == chosen:
+                        st.session_state.pop('saved_workspace_id', None)
+                        st.session_state.pop('chat_save_error', None)
+                    st.session_state.pop('saved_workspace_list', None)
+                    st.success('Saved copy deleted. Any open session or downloaded copy remains until cleared.')
+                except PersistenceError:
+                    st.error('Deletion could not be confirmed. Refresh the list and retry; a deleting item cannot be reopened.')
         if st.session_state.get('saved_workspace_id'):
             st.caption('Chat changes are saved to the open workspace. Reset only clears this session; saved copies remain.')
             if st.button('Save chat now', disabled=blocked):
