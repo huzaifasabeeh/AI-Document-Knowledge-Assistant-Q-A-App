@@ -1,0 +1,66 @@
+{
+  "version": "candidate-1",
+  "synthetic": true,
+  "documents": [
+    {
+      "filename": "onboarding.pdf",
+      "title": "Northstar onboarding",
+      "pages": [
+        [
+          "New starters attend orientation on their first Tuesday.",
+          "The People Operations team runs orientation.",
+          "Equipment requests must be submitted five working days before the start date."
+        ],
+        [
+          "New starters collect laptops from Room 204.",
+          "The assigned team mentor reviews the onboarding checklist at the end of week two."
+        ]
+      ]
+    },
+    {
+      "filename": "travel.pdf",
+      "title": "Northstar travel",
+      "pages": [
+        [
+          "Domestic travel requires approval from the department lead before booking.",
+          "The domestic hotel reimbursement limit is PKR 12000 per night.",
+          "Meal claims are capped at PKR 2500 per travel day."
+        ],
+        [
+          "Travel receipts must be uploaded within seven calendar days after returning.",
+          "A lost travel receipt requires a signed declaration and Finance approval."
+        ]
+      ]
+    },
+    {
+      "filename": "service.pdf",
+      "title": "Northstar service desk",
+      "pages": [
+        [
+          "The service desk operates Monday to Friday from 08:30 to 17:30.",
+          "Urgent incidents must be reported by calling extension 410.",
+          "Routine requests must be submitted through the HelpHub portal."
+        ],
+        [
+          "Urgent incidents have a target first response of 30 minutes during service hours.",
+          "An unresolved urgent incident is escalated to the duty manager after two hours."
+        ]
+      ]
+    },
+    {
+      "filename": "records.pdf",
+      "title": "Northstar records handling",
+      "pages": [
+        [
+          "Project records must be stored in the team Vault folder.",
+          "Only the project owner may approve external sharing of project records.",
+          "Approved external sharing links expire after 72 hours."
+        ],
+        [
+          "Closed-project records are retained for 18 months after project closure.",
+          "A suspected data disclosure must be reported to the security desk within one hour of discovery."
+        ]
+      ]
+    }
+  ]
+}

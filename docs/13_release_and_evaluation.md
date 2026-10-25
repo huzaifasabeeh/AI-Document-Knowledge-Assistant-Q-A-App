@@ -53,9 +53,9 @@ running commit. Account and provider settings are documented in guides 16–18.
    logs against that Git commit, then verify the changed authenticated features.
 2. Install pinned dependencies and configure secrets privately. Verify database
    ownership policies and private storage during the separate acceptance phase.
-   The deployed workspace schema is reported in guide 17, but reproducible SQL
-   migrations are currently absent from this repository; recover and review them
-   before claiming a fresh-environment handoff is reproducible.
+   The deployed workspace schema is reported in guide 17, and its original SQL
+   migrations are now recovered; see guide 20. Grant hardening is applied and verified;
+   fresh-project replay remains pending.
 3. Complete offline gates, then the authorized synthetic-document live evaluation.
    Record provider/model settings, failures, costs where available and acceptance.
 4. Agree access, retention and spending limits before real client documents.
@@ -67,7 +67,8 @@ running commit. Account and provider settings are documented in guides 16–18.
 ## Remaining evaluation deliverables
 
 The nine PDF cases are development fixtures. The separate 40-question held-out
-set required by guide 04 is not yet prepared. Freeze its documents and reviewed
+set required by guide 04 is prepared as a candidate in evaluation/heldout.
+Human ground-truth approval is pending. Freeze its documents and reviewed
 expected answers before testing; do not present the nine cases as that benchmark.
 Prepare results with counts/denominators, citation checks, latency, indexing time,
 provider usage/cost where available, pilot feedback and final reviewer acceptance.

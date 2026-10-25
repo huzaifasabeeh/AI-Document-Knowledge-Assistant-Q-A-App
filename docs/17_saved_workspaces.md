@@ -49,3 +49,5 @@ chat is empty. Reset clears the local session; it does not delete saved copies.
 This prevents changing PDFs while continuing to save answers into a workspace
 whose stored documents are different. A failed save leaves the existing
 selection intact. Full live acceptance remains in the separate testing phase.
+
+Recovered migration history and fresh-project setup: [database guide](20_database_setup.md).

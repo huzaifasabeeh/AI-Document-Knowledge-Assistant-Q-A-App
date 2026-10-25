@@ -50,3 +50,11 @@ Paths above are under `src/knowledge_assistant/` unless otherwise stated.
 No new mandatory core feature was proven absent in this source pass. That does
 not close development or acceptance: schema reproducibility and evaluation
 preparation remain concrete gaps, and full functional testing may reveal bugs.
+
+## Follow-up preparation checkpoint
+
+The original two deployed migration bodies have now been recovered with their
+original versions; see guide 20 for read-only verification and the applied, permission-verified grant restriction. Fresh-project replay remains pending. A separate 40-question
+synthetic candidate, four PDFs, evidence hashes and blank-result recorder are
+prepared under evaluation/heldout. Human ground-truth approval and live runs
+remain pending. These close missing-source/preparation gaps, not acceptance.
