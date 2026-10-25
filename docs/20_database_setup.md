@@ -9,11 +9,11 @@ original version identifiers and SQL are preserved in `supabase/migrations/`:
 1. `20261024153137_saved_user_workspaces.sql`
 2. `20261024153958_workspace_cleanup_states.sql`
 
-A third migration, `20261025224053_restrict_workspace_privileges.sql`, was
-generated with Supabase CLI 2.122.0. It revokes only authenticated TRUNCATE,
-REFERENCES and TRIGGER privileges. It is prepared but **not applied**: automatic
-approval review blocked the production permission change pending explicit owner
-approval. This is not a historical migration and is not in hosted history.
+The third migration, `20261025224959_restrict_workspace_privileges.sql`, was
+applied after explicit owner approval on 26 October 2026 (Pakistan time). It
+revokes only authenticated TRUNCATE, REFERENCES and TRIGGER privileges. The
+CLI-generated draft was renamed to the exact version recorded by the hosted
+migration runner, avoiding duplicate replay under a different timestamp.
 
 These are recovered historical migrations, not newly generated schema changes.
 No hosted data or credentials were exported and neither migration was rerun on
@@ -24,7 +24,7 @@ bucket and save/deletion states. They do not back up users or stored PDF bytes.
 
 Use a fresh disposable Supabase project for rehearsal before deployment. Its
 managed `auth` and `storage` schemas must already exist. In its SQL editor, run
-the first recovered file, then the second, then the proposed privilege restriction,
+the first recovered file, then the second, then the privilege restriction,
 each inside a transaction. This is for a disposable rehearsal only. Stop on
 errors rather than suppressing existing-object failures. These scripts are not
 idempotent and must not be replayed over the existing hosted project.
@@ -50,13 +50,11 @@ The recovered versions already exist in the production migration history.
   Object SELECT/INSERT/DELETE policies require the user's UUID as first path
   segment. The app uploads new UUID paths; it does not need object UPDATE/upsert.
 - Anonymous workspace table grants were absent in the observed grant listing.
-- **Open hardening finding:** authenticated also inherited TRUNCATE, REFERENCES
-  and TRIGGER table privileges on the hosted project. The recovered migrations
-  preserve history and do not remove these defaults. RLS does not protect SQL
-  TRUNCATE. Restrict authenticated to the four application CRUD privileges in a
-  prepared third migration after explicit production approval, then verify grants.
-  Do not claim least-privilege
-  acceptance until that is done. No direct SQL access through the app is implied.
+- **Grant hardening applied and verified:** authenticated retains SELECT,
+  INSERT, UPDATE and DELETE; has_table_privilege returned false for TRUNCATE,
+  REFERENCES and TRIGGER after the migration. No saved rows, PDFs, ownership
+  policies or Auth configuration were changed. Full API isolation testing
+  remains separate from this permission-level verification.
 - No user-metadata-based policy or application SECURITY DEFINER function appears
   in the recovered SQL. This is a scoped review, not a whole-project audit.
 - The security advisor reports leaked-password protection disabled. See

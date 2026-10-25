@@ -14,3 +14,8 @@ select grantee, privilege_type from information_schema.role_table_grants
 where table_schema = 'public' and table_name = 'saved_workspaces';
 select id, public, file_size_limit, allowed_mime_types
 from storage.buckets where id = 'user-documents';
+
+-- Expected: four CRUD privileges true, the three unused privileges false.
+select p as privilege,
+       has_table_privilege('authenticated', 'public.saved_workspaces', p) as allowed
+from unnest(array['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER']) p;

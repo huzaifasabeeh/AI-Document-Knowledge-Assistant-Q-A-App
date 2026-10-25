@@ -54,8 +54,8 @@ running commit. Account and provider settings are documented in guides 16–18.
 2. Install pinned dependencies and configure secrets privately. Verify database
    ownership policies and private storage during the separate acceptance phase.
    The deployed workspace schema is reported in guide 17, and its original SQL
-   migrations are now recovered; see guide 20. Fresh-project replay and the
-   documented grant hardening remain pending.
+   migrations are now recovered; see guide 20. Grant hardening is applied and verified;
+   fresh-project replay remains pending.
 3. Complete offline gates, then the authorized synthetic-document live evaluation.
    Record provider/model settings, failures, costs where available and acceptance.
 4. Agree access, retention and spending limits before real client documents.
