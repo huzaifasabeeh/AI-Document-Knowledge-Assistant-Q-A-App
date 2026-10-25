@@ -36,3 +36,16 @@ separate testing phase at the owner's request. Implementation is not acceptance.
 Supabase advisor reported existing leaked-password protection disabled. This is
 an Auth configuration warning, separate from the new workspace ownership rules.
 See https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+
+
+## Document-set binding
+
+After Save as new workspace, the session uses a copy of the exact PDFs that
+were saved. The uploader is cleared and disabled for that saved workspace.
+Reset documents and chat before choosing another document set or opening
+another workspace, even if the current PDFs have not been indexed and the
+chat is empty. Reset clears the local session; it does not delete saved copies.
+
+This prevents changing PDFs while continuing to save answers into a workspace
+whose stored documents are different. A failed save leaves the existing
+selection intact. Full live acceptance remains in the separate testing phase.

@@ -42,7 +42,7 @@ with st.sidebar:
     active = 'assistant' in st.session_state
     blocked = st.session_state.cleanup_blocked
     files = st.file_uploader('Upload PDFs', type=['pdf'], accept_multiple_files=True,
-        max_upload_size=10, disabled=active or blocked,
+        max_upload_size=10, disabled=active or blocked or bool(st.session_state.get('saved_workspace_id')),
         key=f'uploads-{st.session_state.upload_key}')
     uploads = [Upload(f.name, f.getvalue()) for f in (files or [])]
     if not uploads:
@@ -54,8 +54,8 @@ with st.sidebar:
     selection_signature = tuple((f.name, sha256(f.data).hexdigest()) for f in uploads)
     if selection_signature != st.session_state.preview_signature:
         st.session_state.preview = []
-    if active:
-        st.caption('Reset before changing the indexed document set.')
+    if active or st.session_state.get('saved_workspace_id'):
+        st.caption('Reset before changing this workspace’s document set. Saved copies remain in your account.')
     if uploads and not active:
         st.caption(f'{len(uploads)} file(s) selected — not yet indexed')
         for file in uploads:
