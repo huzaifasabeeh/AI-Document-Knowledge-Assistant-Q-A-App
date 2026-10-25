@@ -12,13 +12,23 @@ def workspace_store():
 
 def saved_workspace_controls(uploads, active, blocked):
     with st.expander('Saved workspaces'):
+        notice = st.session_state.pop('workspace_notice', None)
+        if notice:
+            st.success(notice)
         st.caption('Save PDFs and chat privately to your account. Opening a saved workspace restores its chat; index its PDFs again to ask new questions.')
         title = st.text_input('Workspace name', max_chars=120)
         if st.button('Save as new workspace', disabled=not uploads or blocked):
             try:
                 st.session_state.saved_workspace_id = workspace_store().save(title, uploads, st.session_state.messages)
+                # Bind the current session to the exact PDFs just persisted. Clear
+                # the uploader so later reruns cannot attach different files to
+                # this workspace's saved chat.
+                st.session_state.restored_uploads = list(uploads)
+                st.session_state.upload_key += 1
                 st.session_state.pop('saved_workspace_list', None)
-                st.success('Workspace saved to your account.')
+                st.session_state.pop('chat_save_error', None)
+                st.session_state.workspace_notice = 'Workspace saved to your account.'
+                st.rerun()
             except (PersistenceError, InputError) as exc:
                 st.error(str(exc))
         if st.button('Refresh saved workspaces'):
@@ -32,7 +42,7 @@ def saved_workspace_controls(uploads, active, blocked):
             chosen = st.selectbox('Choose saved workspace', list(titles), format_func=titles.get)
             selected = next(r for r in rows if r['id'] == chosen)
             st.caption('Reset the current session before opening a different workspace. Save any unsaved work first.')
-            if st.button('Open saved workspace', disabled=active or blocked or bool(st.session_state.messages) or selected['status'] != 'ready'):
+            if st.button('Open saved workspace', disabled=active or blocked or bool(uploads) or bool(st.session_state.messages) or selected['status'] != 'ready'):
                 try:
                     restored, messages = workspace_store().load(chosen)
                     st.session_state.restored_uploads = restored
