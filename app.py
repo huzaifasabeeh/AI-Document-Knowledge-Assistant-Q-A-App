@@ -50,6 +50,10 @@ with st.sidebar:
 
     active = 'assistant' in st.session_state
     blocked = st.session_state.cleanup_blocked or provider_changed
+    st.caption('Uploads are processed on the app server. Saving a workspace stores PDFs and chat in your account; AI indexing requires the consent below.')
+    with st.expander('How your data is used'):
+        st.write(f'Indexing sends extracted text to {ai_config.label} for embeddings. Questions and retrieved passages are sent there for answers. Only upload documents you are authorized to process.')
+        st.write('Reset clears this app’s active index and chat. Provider retention is separate. Closing the browser does not guarantee immediate cleanup; restart the server to clear ephemeral state.')
     files = st.file_uploader('Upload PDFs', type=['pdf'], accept_multiple_files=True,
         max_upload_size=10, disabled=active or blocked or bool(st.session_state.get('saved_workspace_id')),
         key=f'uploads-{st.session_state.upload_key}')
@@ -81,9 +85,6 @@ with st.sidebar:
         except InputError as exc:
             st.error(str(exc))
     st.caption('Preview extracts text locally. It does not index documents or generate AI answers.')
-    with st.expander('How your data is used'):
-        st.write(f'Indexing sends extracted text to {ai_config.label} for embeddings. Questions and retrieved passages are sent there for answers. Only upload documents you are authorized to process.')
-        st.write('Reset clears this app’s active index and chat. Provider retention is separate. Closing the browser does not guarantee immediate cleanup; restart the server to clear ephemeral state.')
     consent = st.checkbox(f'I agree to send these documents and questions to {ai_config.label}.', key='consent-' + '|'.join(ai_config.identity))
     has_key = ai_config.ready
     if not has_key:

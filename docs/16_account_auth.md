@@ -1,10 +1,10 @@
 # Signup, login and logout
 
-Scope: email/password accounts through Supabase Auth only. Documents, chat history,
-application database tables and private file storage remain deferred. Existing
+Scope: email/password accounts through Supabase Auth. Private saved PDFs and
+chat are now implemented separately; see [saved workspaces](17_saved_workspaces.md).
 Chroma indexes remain ephemeral and per browser session.
 
-## Configure before deploying this branch
+## Account configuration
 
 1. Create/select your Supabase project and enable email/password Auth with email
    confirmation enabled. Set the Auth Site URL to your Streamlit app URL. Configure
@@ -19,11 +19,10 @@ SUPABASE_PUBLISHABLE_KEY = "YOUR_PUBLISHABLE_KEY"
 
 A legacy anon key is also accepted under the same key name. Never use service-role
 or secret keys. Locally, use environment variables or `.streamlit/secrets.toml`.
-Do not commit real credentials. No SQL migration or application tables are needed
-for this phase; Supabase manages its own authentication account records.
-3. Deploy the reviewed authentication branch/commit. Missing/invalid configuration
-   blocks the workspace rather than bypassing login. Existing main remains unchanged
-   until this change is merged/deployed.
+Do not commit real credentials. Authentication itself needs no application tables. Saved workspaces separately
+require the deployed database/storage schema; see the storage guide.
+3. Deploy the reviewed commit. Missing/invalid configuration blocks the workspace
+   rather than bypassing login. Authentication is already merged into main.
 4. Sign up, open the confirmation email, then return to the app and log in with your
    email/password. This app does not consume URL token fragments or auto-login from
    confirmation callbacks. Existing accounts receive neutral signup instructions.
@@ -51,7 +50,8 @@ login, invalid credentials, account mismatch, per-session separation, logout des
 remote/cleanup errors, and sanitized provider errors. Existing document-flow tests
 explicitly mock the gate; they do not bypass authentication in production.
 
-Live acceptance is pending owner configuration: verify email delivery, confirmed login,
+The owner reported signup/login/logout working on the hosted app. Remaining release
+acceptance must verify email delivery, confirmed login,
 wrong password, two independent accounts/browser sessions, logout, expiration and
 network failure. No real Supabase account or authentication request was created during
 implementation. This is not persistent multi-user document-storage acceptance.

@@ -20,7 +20,7 @@ fixtures only; every live result remains **Not run**.
 
 ## Deferred acceptance session
 
-After funded API access is authorized, use only the synthetic sample PDFs.
+After the selected provider is configured and live testing is authorized, use only the synthetic sample PDFs.
 Reset between cases and upload exactly each case's `files` list. For each case,
 record commit, model, date, actual answer, cited pages, latency and pass/fail in
 a separate result log. Never overwrite expectations to match model output.
@@ -42,19 +42,35 @@ User-confirmed reset, multi-PDF pages/names, invalid-file rejection without
 crash, and subsequent valid-file recovery need not be repeated step by step
 now. Repeat essential flows against the release candidate at final acceptance.
 
-## Deployment preparation (not a deployment)
+## Deployment and rollback
 
-1. Select an approved private hosting target and API budget. Do not expose this
-   prototype publicly: authentication, session expiry and automatic lifecycle
-   cleanup are not implemented.
-2. Provision a supported Python environment and install the repository's pinned
-   dependencies. Set API/model environment values through host secret settings.
-3. Run offline tests and dependency checks, then start `streamlit run app.py`.
-4. Complete funded smoke/evaluation tests and resolve failed cases.
-5. Agree on access control, data retention, spending limits and cleanup before
-   real client documents are accepted. Record reviewer acceptance separately.
-6. Release only after the pending criteria pass. Record the deployed commit and
-   rollback commit; rollback code if needed and restart affected sessions.
+The app is already hosted and authentication is implemented. Latest feature
+acceptance remains pending; a working login page alone cannot identify the
+running commit. Account and provider settings are documented in guides 16–18.
 
-Week 2 RAG and Week 3 pilot remain In progress until their live validation and
-review requirements are met. Documentation preparation does not close them.
+1. Record the candidate Git commit, previous working commit, hosting branch/main
+   and entrypoint/app.py. Confirm the deployed revision through host deployment
+   logs against that Git commit, then verify the changed authenticated features.
+2. Install pinned dependencies and configure secrets privately. Verify database
+   ownership policies and private storage during the separate acceptance phase.
+   The deployed workspace schema is reported in guide 17, but reproducible SQL
+   migrations are currently absent from this repository; recover and review them
+   before claiming a fresh-environment handoff is reproducible.
+3. Complete offline gates, then the authorized synthetic-document live evaluation.
+   Record provider/model settings, failures, costs where available and acceptance.
+4. Agree access, retention and spending limits before real client documents.
+5. For rollback, create a reviewed revert of the release changes on the hosting
+   branch, deploy it and restart affected sessions. Preserve saved data. Code
+   rollback does not roll back database/schema or secret changes; assess their
+   compatibility separately before changing them. Record both revisions/results.
+
+## Remaining evaluation deliverables
+
+The nine PDF cases are development fixtures. The separate 40-question held-out
+set required by guide 04 is not yet prepared. Freeze its documents and reviewed
+expected answers before testing; do not present the nine cases as that benchmark.
+Prepare results with counts/denominators, citation checks, latency, indexing time,
+provider usage/cost where available, pilot feedback and final reviewer acceptance.
+
+Week 2 RAG and Week 3 pilot remain In progress until live validation and review
+requirements are met. Documentation updates do not close those requirements.
