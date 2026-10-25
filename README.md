@@ -1,32 +1,36 @@
-## Optional Gemini configuration
+# AI Document Knowledge Assistant & Q&A App
 
-The application can be configured to use OpenAI or Google Gemini for both
-embeddings and answers. See [provider setup](docs/18_ai_providers.md).
-Provider integration is implemented but not live-validated; full testing is
-scheduled separately. OpenAI remains the default.
+Streamlit UI with Python, LangChain, session-scoped Chroma retrieval, PDF page
+citations, Supabase accounts and private saved PDFs/chat. OpenAI is the default;
+optional Gemini support is implemented. Provider access and full live acceptance
+remain pending; implementation is not proof of answer quality or isolation.
 
-# Account access
+## Current status — 26 October 2026
 
-Signup, login and logout now gate the workspace through Supabase Auth. Configure
-`SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` before deploying this candidate.
-[Setup, scope and live acceptance](docs/16_account_auth.md). Document persistence
-and saved chat history are deferred. Live authentication has not yet been verified.
+PRs #5 (saved-document binding) and #6 (provider selection) are merged. Their
+automated checks passed. The owner reported signup/login/logout working; the
+public login page was observed loading. Exact latest deployment, saved-workspace
+flows and real provider answers have not completed final acceptance.
 
-# Prototype progress
+- [Recovered database setup](docs/20_database_setup.md)
+- [40-question evaluation candidate](evaluation/heldout/README.md)
+- [Requirements review and remaining work](docs/19_requirements_review.md)
+- [User guide](docs/12_user_guide.md)
+- [Account setup](docs/16_account_auth.md)
+- [Saved workspaces and deletion](docs/17_saved_workspaces.md)
+- [AI provider settings](docs/18_ai_providers.md)
+- [Release and evaluation runbook](docs/13_release_and_evaluation.md)
 
-Week 3 frontend work has started: document sidebar, local page preview without API calls, status metrics, source excerpts and readable provider errors. See [frontend checkpoint and run guide](docs/11_frontend_checkpoint.md). Live AI validation and pilot evaluation remain pending.
+Install `requirements-lock.txt`, configure Supabase and the selected AI provider
+through environment variables or Streamlit Secrets, then run
+`python -m streamlit run app.py`. A `.env` file is not loaded automatically.
+Preview needs account access but makes no AI API calls. Configure a working AI
+key and models before indexing. Never commit credentials or client documents.
+Install `requirements-dev.txt` and run `python -m pytest -q` for offline checks.
 
-Previous maintenance checkpoint: repeat-safe cleanup, binary PDF checkout protection and
-strict sample-PDF regression checks are implemented. The offline suite now has
-26 passing tests on Linux. Windows previously passed the original 18 tests;
-the new Windows rerun is pending. Live validation is blocked by unavailable API
-credits. See [results and Windows next steps](docs/10_week2_live_test_results.md).
-
-The repository now includes a Python/Streamlit document Q&A prototype with PDF extraction, per-page chunking, session-scoped Chroma retrieval and an OpenAI structured-answer integration. See [setup and workflow](docs/08_week2_workflow.md) and [test log](docs/09_week2_test_log.md). The extraction pipeline is locally validated; live OpenAI answer quality remains unverified. API credentials are required to index documents and generate answers.
-
-Run `pip install -r requirements-lock.txt`, configure `OPENAI_API_KEY` in your environment, then run `streamlit run app.py`. Run offline checks with `python -m pytest -q`.
-
-GitHub-to-Notion task statuses are maintained in `project/tasks.json`. Automatic sync still requires the separate `NOTION_TOKEN` repository secret and tracker access; see [sync setup](docs/07_notion_sync_setup.md). Completion of a push is not evidence that either provider integration succeeded.
+`project/tasks.json` controls GitHub-to-Notion status sync. Sync requires its own
+repository secret and tracker access; see [setup](docs/07_notion_sync_setup.md).
+Do not mark live acceptance complete from code changes or CI alone.
 
 ---
 
