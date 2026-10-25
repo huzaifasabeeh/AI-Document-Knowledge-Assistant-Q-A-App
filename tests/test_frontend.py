@@ -17,7 +17,7 @@ def test_local_preview_needs_no_key_or_provider(monkeypatch):
     file.getvalue.return_value = (APP.parent / 'data/sample_pdfs/leave.pdf').read_bytes()
     monkeypatch.setattr(st, 'file_uploader', lambda *a, **kw: [file])
     factory = Mock(side_effect=AssertionError('No provider allowed'))
-    monkeypatch.setattr('src.knowledge_assistant.core.openai_assistant', factory)
+    monkeypatch.setattr('src.knowledge_assistant.providers.configured_assistant', factory)
     app = AppTest.from_file(APP).run()
     app.button(key='preview_pages').click().run()
     assert not app.exception
@@ -42,11 +42,12 @@ def test_failed_index_shows_quota_and_allows_fresh_retry(monkeypatch):
     failed = Mock()
     failed.ingest.side_effect = error
     successful = Mock()
+    successful.provider_identity = ('openai', 'gpt-4.1-mini', 'text-embedding-3-small')
     successful.ingest.return_value = 2
     factory = Mock(side_effect=[failed, successful])
-    monkeypatch.setattr('src.knowledge_assistant.core.openai_assistant', factory)
+    monkeypatch.setattr('src.knowledge_assistant.providers.configured_assistant', factory)
     app = AppTest.from_file(APP).run()
-    app.checkbox(key='consent').check().run()
+    app.checkbox(key='consent-openai|gpt-4.1-mini|text-embedding-3-small').check().run()
     app.button(key='index').click().run()
     assert not app.exception
     assert any('credits are unavailable' in e.value for e in app.error)
@@ -57,7 +58,7 @@ def test_failed_index_shows_quota_and_allows_fresh_retry(monkeypatch):
     assert not app.exception
     assert not app.chat_input[0].disabled
     assert app.session_state['documents'] == ['leave.pdf']
-    app.checkbox(key='consent').uncheck().run()
+    app.checkbox(key='consent-openai|gpt-4.1-mini|text-embedding-3-small').uncheck().run()
     assert app.chat_input[0].disabled
     app.button(key='reset').click().run()
     assert not app.exception
@@ -68,6 +69,7 @@ def test_failed_index_shows_quota_and_allows_fresh_retry(monkeypatch):
 
 def test_cleanup_failure_blocks_chat_until_reset():
     engine = Mock()
+    engine.provider_identity = ('openai', 'gpt-4.1-mini', 'text-embedding-3-small')
     engine.close.side_effect = [RuntimeError('busy'), None]
     app = AppTest.from_file(APP)
     app.session_state['assistant'] = engine
@@ -102,13 +104,14 @@ def test_provider_errors_never_echo_raw_details(status, code, expected):
 
 def test_chat_renders_sources_and_keeps_evidence_out_of_history():
     engine = Mock()
+    engine.provider_identity = ('openai', 'gpt-4.1-mini', 'text-embedding-3-small')
     engine.ask.return_value = (
         Answer(status='answered', claims=[Claim(text='20 days.', source_ids=['c1'])]),
         {'c1': Document(page_content='Employees receive 20 days.', metadata={'filename':'leave.pdf','page':1})})
     app = AppTest.from_file(APP)
     app.session_state['assistant'] = engine
     app.session_state['documents'] = ['leave.pdf']
-    app.session_state['consent'] = True
+    app.session_state['consent-openai|gpt-4.1-mini|text-embedding-3-small'] = True
     app.run()
     app.chat_input[0].set_value('How much leave?').run()
     assert not app.exception
@@ -141,11 +144,12 @@ def test_preview_clears_when_same_filename_content_changes(monkeypatch):
 
 def test_clear_chat_keeps_index_and_removes_followup_context():
     engine = Mock()
+    engine.provider_identity = ('openai', 'gpt-4.1-mini', 'text-embedding-3-small')
     engine.ask.return_value = (Answer(status='not_found', claims=[]), {})
     app = AppTest.from_file(APP)
     app.session_state['assistant'] = engine
     app.session_state['documents'] = ['leave.pdf']
-    app.session_state['consent'] = True
+    app.session_state['consent-openai|gpt-4.1-mini|text-embedding-3-small'] = True
     app.session_state['messages'] = [
         {'role': 'user', 'content': 'Old question'},
         {'role': 'assistant', 'content': 'Old answer', 'sources': []}]
