@@ -52,7 +52,7 @@ def test_smoke_preserves_primary_failure_when_final_cleanup_fails(monkeypatch):
     failure = RuntimeError('original provider failure')
     engine.ingest.side_effect = failure
     engine.close.side_effect = RuntimeError('cleanup failed')
-    monkeypatch.setattr(live_smoke, 'openai_assistant', lambda: engine)
+    monkeypatch.setattr(live_smoke, 'configured_assistant', lambda: engine)
     with pytest.raises(RuntimeError) as caught:
         live_smoke.main()
     assert caught.value is failure
@@ -63,6 +63,6 @@ def test_smoke_reports_cleanup_failure_after_success(monkeypatch):
     engine = Mock()
     engine.ask.return_value = (Answer(status='not_found', claims=[]), {})
     engine.close.side_effect = RuntimeError('cleanup failed')
-    monkeypatch.setattr(live_smoke, 'openai_assistant', lambda: engine)
+    monkeypatch.setattr(live_smoke, 'configured_assistant', lambda: engine)
     with pytest.raises(RuntimeError, match='cleanup failed'):
         live_smoke.main()
