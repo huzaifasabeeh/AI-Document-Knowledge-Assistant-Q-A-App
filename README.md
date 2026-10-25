@@ -1,3 +1,10 @@
+## Optional Gemini configuration
+
+The application can be configured to use OpenAI or Google Gemini for both
+embeddings and answers. See [provider setup](docs/18_ai_providers.md).
+Provider integration is implemented but not live-validated; full testing is
+scheduled separately. OpenAI remains the default.
+
 # Account access
 
 Signup, login and logout now gate the workspace through Supabase Auth. Configure

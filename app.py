@@ -1,14 +1,23 @@
 """Streamlit document workspace. Run with: streamlit run app.py."""
-import os
 from hashlib import sha256
 import streamlit as st
-from src.knowledge_assistant.core import InputError, Upload, extract, openai_assistant
+from src.knowledge_assistant.core import InputError, Upload, extract
 from src.knowledge_assistant.presentation import format_answer, provider_error, export_chat
 from src.knowledge_assistant.persistence_ui import saved_workspace_controls, persist_chat
 
 st.set_page_config(page_title='Document Knowledge Assistant', page_icon='📚', layout='wide')
-from src.knowledge_assistant.auth_ui import require_login
+from src.knowledge_assistant.auth_ui import require_login, setting
+from src.knowledge_assistant.providers import provider_config, configured_assistant
 require_login()
+try:
+    ai_config = provider_config(setting)
+except ValueError as exc:
+    st.error(str(exc))
+    st.stop()
+provider_changed = (st.session_state.get('assistant') is not None and
+    getattr(st.session_state.assistant, 'provider_identity', None) != ai_config.identity)
+if provider_changed:
+    st.warning('AI configuration changed. Reset and re-index your documents before continuing.')
 for key, default in [('messages', []), ('documents', []), ('passage_count', 0),
                      ('preview', []), ('preview_signature', None), ('upload_key', 0), ('cleanup_blocked', False)]:
     if key not in st.session_state:
@@ -40,7 +49,7 @@ with st.sidebar:
         st.rerun()
 
     active = 'assistant' in st.session_state
-    blocked = st.session_state.cleanup_blocked
+    blocked = st.session_state.cleanup_blocked or provider_changed
     files = st.file_uploader('Upload PDFs', type=['pdf'], accept_multiple_files=True,
         max_upload_size=10, disabled=active or blocked,
         key=f'uploads-{st.session_state.upload_key}')
@@ -73,19 +82,19 @@ with st.sidebar:
             st.error(str(exc))
     st.caption('Preview extracts text locally. It does not index documents or generate AI answers.')
     with st.expander('How your data is used'):
-        st.write('Indexing sends extracted text to OpenAI for embeddings. Questions and retrieved passages are sent for answers. Only upload documents you are authorized to process.')
+        st.write(f'Indexing sends extracted text to {ai_config.label} for embeddings. Questions and retrieved passages are sent there for answers. Only upload documents you are authorized to process.')
         st.write('Reset clears this app’s active index and chat. Provider retention is separate. Closing the browser does not guarantee immediate cleanup; restart the server to clear ephemeral state.')
-    consent = st.checkbox('I agree to send these documents and questions to OpenAI.', key='consent')
-    has_key = bool(os.environ.get('OPENAI_API_KEY'))
+    consent = st.checkbox(f'I agree to send these documents and questions to {ai_config.label}.', key='consent-' + '|'.join(ai_config.identity))
+    has_key = ai_config.ready
     if not has_key:
-        st.info('AI indexing needs an API key in the server environment. Local preview is available.')
-    st.caption('AI indexing and answers use paid API credits. A configured key does not confirm available credits.')
+        st.info(f'Configure the {ai_config.label} API key and both model names on the server. PDF preview remains available.')
+    st.caption(f'AI provider: {ai_config.label}. Availability and charges depend on your provider plan and quota; a configured key does not confirm access.')
     if st.button('Index documents', key='index', type='primary', width='stretch',
                  disabled=not consent or not uploads or active or blocked or not has_key):
         engine = None
         try:
             with st.spinner('Extracting and indexing…'):
-                engine = openai_assistant()
+                engine = configured_assistant(ai_config)
                 count = engine.ingest(uploads)
             st.session_state.assistant = engine
             st.session_state.documents = [f.name for f in uploads]
@@ -112,7 +121,7 @@ st.caption('Ask your documents. Inspect the supporting pages.')
 if st.session_state.get('chat_save_error'):
     st.warning(st.session_state.chat_save_error + ' Use Save chat now to retry before leaving.')
 active = 'assistant' in st.session_state
-blocked = st.session_state.cleanup_blocked
+blocked = st.session_state.cleanup_blocked or provider_changed
 cols = st.columns(3)
 cols[0].metric('Indexed documents', len(st.session_state.documents))
 cols[1].metric('Searchable passages', st.session_state.passage_count)
