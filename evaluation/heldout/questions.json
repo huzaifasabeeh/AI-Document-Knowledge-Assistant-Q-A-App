@@ -1,0 +1,658 @@
+{
+  "version": "candidate-1",
+  "ground_truth_review": "pending",
+  "cases": [
+    {
+      "category": "direct",
+      "files": [
+        "onboarding.pdf"
+      ],
+      "question": "When do new starters attend orientation?",
+      "expected_status": "answered",
+      "expected_answer": "Their first Tuesday.",
+      "evidence": [
+        {
+          "filename": "onboarding.pdf",
+          "page": 1,
+          "text": "New starters attend orientation on their first Tuesday."
+        }
+      ],
+      "id": "H01"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "onboarding.pdf"
+      ],
+      "question": "Who runs orientation?",
+      "expected_status": "answered",
+      "expected_answer": "The People Operations team.",
+      "evidence": [
+        {
+          "filename": "onboarding.pdf",
+          "page": 1,
+          "text": "The People Operations team runs orientation."
+        }
+      ],
+      "id": "H02"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "onboarding.pdf"
+      ],
+      "question": "How far ahead of the start date must equipment requests be submitted?",
+      "expected_status": "answered",
+      "expected_answer": "Five working days before the start date.",
+      "evidence": [
+        {
+          "filename": "onboarding.pdf",
+          "page": 1,
+          "text": "Equipment requests must be submitted five working days before the start date."
+        }
+      ],
+      "id": "H03"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "onboarding.pdf"
+      ],
+      "question": "Where do new starters collect laptops?",
+      "expected_status": "answered",
+      "expected_answer": "Room 204.",
+      "evidence": [
+        {
+          "filename": "onboarding.pdf",
+          "page": 2,
+          "text": "New starters collect laptops from Room 204."
+        }
+      ],
+      "id": "H04"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "onboarding.pdf"
+      ],
+      "question": "Who reviews the onboarding checklist, and when?",
+      "expected_status": "answered",
+      "expected_answer": "The assigned team mentor, at the end of week two.",
+      "evidence": [
+        {
+          "filename": "onboarding.pdf",
+          "page": 2,
+          "text": "The assigned team mentor reviews the onboarding checklist at the end of week two."
+        }
+      ],
+      "id": "H05"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "travel.pdf"
+      ],
+      "question": "Who must approve domestic travel before booking?",
+      "expected_status": "answered",
+      "expected_answer": "The department lead.",
+      "evidence": [
+        {
+          "filename": "travel.pdf",
+          "page": 1,
+          "text": "Domestic travel requires approval from the department lead before booking."
+        }
+      ],
+      "id": "H06"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "travel.pdf"
+      ],
+      "question": "What is the domestic hotel reimbursement limit per night?",
+      "expected_status": "answered",
+      "expected_answer": "PKR 12000 per night.",
+      "evidence": [
+        {
+          "filename": "travel.pdf",
+          "page": 1,
+          "text": "The domestic hotel reimbursement limit is PKR 12000 per night."
+        }
+      ],
+      "id": "H07"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "travel.pdf"
+      ],
+      "question": "What is the meal claim cap per travel day?",
+      "expected_status": "answered",
+      "expected_answer": "PKR 2500 per travel day.",
+      "evidence": [
+        {
+          "filename": "travel.pdf",
+          "page": 1,
+          "text": "Meal claims are capped at PKR 2500 per travel day."
+        }
+      ],
+      "id": "H08"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "travel.pdf"
+      ],
+      "question": "When must travel receipts be uploaded?",
+      "expected_status": "answered",
+      "expected_answer": "Within seven calendar days after returning.",
+      "evidence": [
+        {
+          "filename": "travel.pdf",
+          "page": 2,
+          "text": "Travel receipts must be uploaded within seven calendar days after returning."
+        }
+      ],
+      "id": "H09"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "travel.pdf"
+      ],
+      "question": "What is required when a travel receipt is lost?",
+      "expected_status": "answered",
+      "expected_answer": "A signed declaration and Finance approval.",
+      "evidence": [
+        {
+          "filename": "travel.pdf",
+          "page": 2,
+          "text": "A lost travel receipt requires a signed declaration and Finance approval."
+        }
+      ],
+      "id": "H10"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "service.pdf"
+      ],
+      "question": "What are the service desk operating days and hours?",
+      "expected_status": "answered",
+      "expected_answer": "Monday to Friday, 08:30 to 17:30.",
+      "evidence": [
+        {
+          "filename": "service.pdf",
+          "page": 1,
+          "text": "The service desk operates Monday to Friday from 08:30 to 17:30."
+        }
+      ],
+      "id": "H11"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "service.pdf"
+      ],
+      "question": "How must urgent incidents be reported?",
+      "expected_status": "answered",
+      "expected_answer": "Call extension 410.",
+      "evidence": [
+        {
+          "filename": "service.pdf",
+          "page": 1,
+          "text": "Urgent incidents must be reported by calling extension 410."
+        }
+      ],
+      "id": "H12"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "service.pdf"
+      ],
+      "question": "Where must routine requests be submitted?",
+      "expected_status": "answered",
+      "expected_answer": "The HelpHub portal.",
+      "evidence": [
+        {
+          "filename": "service.pdf",
+          "page": 1,
+          "text": "Routine requests must be submitted through the HelpHub portal."
+        }
+      ],
+      "id": "H13"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "service.pdf"
+      ],
+      "question": "What is the target first response for urgent incidents during service hours?",
+      "expected_status": "answered",
+      "expected_answer": "30 minutes during service hours.",
+      "evidence": [
+        {
+          "filename": "service.pdf",
+          "page": 2,
+          "text": "Urgent incidents have a target first response of 30 minutes during service hours."
+        }
+      ],
+      "id": "H14"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "service.pdf"
+      ],
+      "question": "When and to whom is an unresolved urgent incident escalated?",
+      "expected_status": "answered",
+      "expected_answer": "To the duty manager after two hours.",
+      "evidence": [
+        {
+          "filename": "service.pdf",
+          "page": 2,
+          "text": "An unresolved urgent incident is escalated to the duty manager after two hours."
+        }
+      ],
+      "id": "H15"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "records.pdf"
+      ],
+      "question": "Where must project records be stored?",
+      "expected_status": "answered",
+      "expected_answer": "The team Vault folder.",
+      "evidence": [
+        {
+          "filename": "records.pdf",
+          "page": 1,
+          "text": "Project records must be stored in the team Vault folder."
+        }
+      ],
+      "id": "H16"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "records.pdf"
+      ],
+      "question": "Who may approve external sharing of project records?",
+      "expected_status": "answered",
+      "expected_answer": "Only the project owner.",
+      "evidence": [
+        {
+          "filename": "records.pdf",
+          "page": 1,
+          "text": "Only the project owner may approve external sharing of project records."
+        }
+      ],
+      "id": "H17"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "records.pdf"
+      ],
+      "question": "When do approved external sharing links expire?",
+      "expected_status": "answered",
+      "expected_answer": "After 72 hours.",
+      "evidence": [
+        {
+          "filename": "records.pdf",
+          "page": 1,
+          "text": "Approved external sharing links expire after 72 hours."
+        }
+      ],
+      "id": "H18"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "records.pdf"
+      ],
+      "question": "How long are closed-project records retained?",
+      "expected_status": "answered",
+      "expected_answer": "18 months after project closure.",
+      "evidence": [
+        {
+          "filename": "records.pdf",
+          "page": 2,
+          "text": "Closed-project records are retained for 18 months after project closure."
+        }
+      ],
+      "id": "H19"
+    },
+    {
+      "category": "direct",
+      "files": [
+        "records.pdf"
+      ],
+      "question": "Where and when must a suspected data disclosure be reported?",
+      "expected_status": "answered",
+      "expected_answer": "To the security desk within one hour of discovery.",
+      "evidence": [
+        {
+          "filename": "records.pdf",
+          "page": 2,
+          "text": "A suspected data disclosure must be reported to the security desk within one hour of discovery."
+        }
+      ],
+      "id": "H20"
+    },
+    {
+      "category": "paraphrased",
+      "files": [
+        "onboarding.pdf"
+      ],
+      "question": "I have just joined. On which day should I go to the introductory session?",
+      "expected_status": "answered",
+      "expected_answer": "Their first Tuesday.",
+      "evidence": [
+        {
+          "filename": "onboarding.pdf",
+          "page": 1,
+          "text": "New starters attend orientation on their first Tuesday."
+        }
+      ],
+      "id": "H21"
+    },
+    {
+      "category": "paraphrased",
+      "files": [
+        "onboarding.pdf"
+      ],
+      "question": "When should I send my equipment request relative to my joining date?",
+      "expected_status": "answered",
+      "expected_answer": "Five working days before the start date.",
+      "evidence": [
+        {
+          "filename": "onboarding.pdf",
+          "page": 1,
+          "text": "Equipment requests must be submitted five working days before the start date."
+        }
+      ],
+      "id": "H22"
+    },
+    {
+      "category": "paraphrased",
+      "files": [
+        "travel.pdf"
+      ],
+      "question": "After my trip ends, how much time do I have to send in the receipts?",
+      "expected_status": "answered",
+      "expected_answer": "Within seven calendar days after returning.",
+      "evidence": [
+        {
+          "filename": "travel.pdf",
+          "page": 2,
+          "text": "Travel receipts must be uploaded within seven calendar days after returning."
+        }
+      ],
+      "id": "H23"
+    },
+    {
+      "category": "paraphrased",
+      "files": [
+        "service.pdf"
+      ],
+      "question": "During opening hours, how quickly should the desk first respond to an urgent incident?",
+      "expected_status": "answered",
+      "expected_answer": "30 minutes during service hours.",
+      "evidence": [
+        {
+          "filename": "service.pdf",
+          "page": 2,
+          "text": "Urgent incidents have a target first response of 30 minutes during service hours."
+        }
+      ],
+      "id": "H24"
+    },
+    {
+      "category": "paraphrased",
+      "files": [
+        "records.pdf"
+      ],
+      "question": "How long will a permitted outside-sharing link stay usable?",
+      "expected_status": "answered",
+      "expected_answer": "After 72 hours.",
+      "evidence": [
+        {
+          "filename": "records.pdf",
+          "page": 1,
+          "text": "Approved external sharing links expire after 72 hours."
+        }
+      ],
+      "id": "H25"
+    },
+    {
+      "category": "multi_passage",
+      "files": [
+        "onboarding.pdf"
+      ],
+      "question": "When is orientation, and who reviews the onboarding checklist at what point?",
+      "expected_status": "answered",
+      "expected_answer": "Their first Tuesday. The assigned team mentor, at the end of week two.",
+      "evidence": [
+        {
+          "filename": "onboarding.pdf",
+          "page": 1,
+          "text": "New starters attend orientation on their first Tuesday."
+        },
+        {
+          "filename": "onboarding.pdf",
+          "page": 2,
+          "text": "The assigned team mentor reviews the onboarding checklist at the end of week two."
+        }
+      ],
+      "id": "H26"
+    },
+    {
+      "category": "multi_passage",
+      "files": [
+        "travel.pdf"
+      ],
+      "question": "What is the nightly domestic hotel cap, and how soon after returning must receipts be uploaded?",
+      "expected_status": "answered",
+      "expected_answer": "PKR 12000 per night. Within seven calendar days after returning.",
+      "evidence": [
+        {
+          "filename": "travel.pdf",
+          "page": 1,
+          "text": "The domestic hotel reimbursement limit is PKR 12000 per night."
+        },
+        {
+          "filename": "travel.pdf",
+          "page": 2,
+          "text": "Travel receipts must be uploaded within seven calendar days after returning."
+        }
+      ],
+      "id": "H27"
+    },
+    {
+      "category": "multi_passage",
+      "files": [
+        "service.pdf"
+      ],
+      "question": "How do I report an urgent incident, and when and to whom is it escalated if unresolved?",
+      "expected_status": "answered",
+      "expected_answer": "Call extension 410. To the duty manager after two hours.",
+      "evidence": [
+        {
+          "filename": "service.pdf",
+          "page": 1,
+          "text": "Urgent incidents must be reported by calling extension 410."
+        },
+        {
+          "filename": "service.pdf",
+          "page": 2,
+          "text": "An unresolved urgent incident is escalated to the duty manager after two hours."
+        }
+      ],
+      "id": "H28"
+    },
+    {
+      "category": "multi_passage",
+      "files": [
+        "records.pdf"
+      ],
+      "question": "Who approves sharing project records externally, and how long are records kept after closure?",
+      "expected_status": "answered",
+      "expected_answer": "Only the project owner. 18 months after project closure.",
+      "evidence": [
+        {
+          "filename": "records.pdf",
+          "page": 1,
+          "text": "Only the project owner may approve external sharing of project records."
+        },
+        {
+          "filename": "records.pdf",
+          "page": 2,
+          "text": "Closed-project records are retained for 18 months after project closure."
+        }
+      ],
+      "id": "H29"
+    },
+    {
+      "category": "multi_passage",
+      "files": [
+        "onboarding.pdf",
+        "records.pdf"
+      ],
+      "question": "Where do I collect my laptop, and where must I store project records?",
+      "expected_status": "answered",
+      "expected_answer": "Room 204. The team Vault folder.",
+      "evidence": [
+        {
+          "filename": "onboarding.pdf",
+          "page": 2,
+          "text": "New starters collect laptops from Room 204."
+        },
+        {
+          "filename": "records.pdf",
+          "page": 1,
+          "text": "Project records must be stored in the team Vault folder."
+        }
+      ],
+      "id": "H30"
+    },
+    {
+      "category": "unanswerable",
+      "files": [
+        "onboarding.pdf"
+      ],
+      "question": "How long does orientation last?",
+      "expected_status": "not_found",
+      "expected_answer": "State that the supplied documents do not contain enough information. Do not infer or invent the missing detail.",
+      "evidence": [],
+      "id": "H31"
+    },
+    {
+      "category": "unanswerable",
+      "files": [
+        "onboarding.pdf"
+      ],
+      "question": "What is the equipment replacement budget?",
+      "expected_status": "not_found",
+      "expected_answer": "State that the supplied documents do not contain enough information. Do not infer or invent the missing detail.",
+      "evidence": [],
+      "id": "H32"
+    },
+    {
+      "category": "unanswerable",
+      "files": [
+        "travel.pdf"
+      ],
+      "question": "What is the international hotel reimbursement limit?",
+      "expected_status": "not_found",
+      "expected_answer": "State that the supplied documents do not contain enough information. Do not infer or invent the missing detail.",
+      "evidence": [],
+      "id": "H33"
+    },
+    {
+      "category": "unanswerable",
+      "files": [
+        "travel.pdf"
+      ],
+      "question": "What mileage rate is paid for a personal car?",
+      "expected_status": "not_found",
+      "expected_answer": "State that the supplied documents do not contain enough information. Do not infer or invent the missing detail.",
+      "evidence": [],
+      "id": "H34"
+    },
+    {
+      "category": "unanswerable",
+      "files": [
+        "service.pdf"
+      ],
+      "question": "What is the target first response for routine requests?",
+      "expected_status": "not_found",
+      "expected_answer": "State that the supplied documents do not contain enough information. Do not infer or invent the missing detail.",
+      "evidence": [],
+      "id": "H35"
+    },
+    {
+      "category": "unanswerable",
+      "files": [
+        "service.pdf"
+      ],
+      "question": "Which phone number provides service desk support on Sundays?",
+      "expected_status": "not_found",
+      "expected_answer": "State that the supplied documents do not contain enough information. Do not infer or invent the missing detail.",
+      "evidence": [],
+      "id": "H36"
+    },
+    {
+      "category": "unanswerable",
+      "files": [
+        "records.pdf"
+      ],
+      "question": "Which encryption algorithm protects the Vault folder?",
+      "expected_status": "not_found",
+      "expected_answer": "State that the supplied documents do not contain enough information. Do not infer or invent the missing detail.",
+      "evidence": [],
+      "id": "H37"
+    },
+    {
+      "category": "unanswerable",
+      "files": [
+        "records.pdf"
+      ],
+      "question": "What is the financial penalty for late disclosure reporting?",
+      "expected_status": "not_found",
+      "expected_answer": "State that the supplied documents do not contain enough information. Do not infer or invent the missing detail.",
+      "evidence": [],
+      "id": "H38"
+    },
+    {
+      "category": "unanswerable",
+      "files": [
+        "onboarding.pdf",
+        "travel.pdf",
+        "service.pdf",
+        "records.pdf"
+      ],
+      "question": "How many annual leave days do Northstar employees receive?",
+      "expected_status": "not_found",
+      "expected_answer": "State that the supplied documents do not contain enough information. Do not infer or invent the missing detail.",
+      "evidence": [],
+      "id": "H39"
+    },
+    {
+      "category": "unanswerable",
+      "files": [
+        "onboarding.pdf",
+        "travel.pdf",
+        "service.pdf",
+        "records.pdf"
+      ],
+      "question": "Who is the named individual serving as chief executive?",
+      "expected_status": "not_found",
+      "expected_answer": "State that the supplied documents do not contain enough information. Do not infer or invent the missing detail.",
+      "evidence": [],
+      "id": "H40"
+    }
+  ]
+}

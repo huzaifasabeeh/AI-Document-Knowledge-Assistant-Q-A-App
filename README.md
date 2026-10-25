@@ -12,6 +12,8 @@ automated checks passed. The owner reported signup/login/logout working; the
 public login page was observed loading. Exact latest deployment, saved-workspace
 flows and real provider answers have not completed final acceptance.
 
+- [Recovered database setup](docs/20_database_setup.md)
+- [40-question evaluation candidate](evaluation/heldout/README.md)
 - [Requirements review and remaining work](docs/19_requirements_review.md)
 - [User guide](docs/12_user_guide.md)
 - [Account setup](docs/16_account_auth.md)
