@@ -7,7 +7,8 @@ reuse facts intentionally; results are correlated, not 40 independent facts.
 
 `questions.json` contains expected answers and physical-page evidence. Automated
 checks establish file/evidence consistency, not semantic correctness or human
-approval. Ground-truth review is **pending**. This is an author-prepared held-out
+approval. Assistant source review of all 40 cases is complete; see [case review](REVIEW.md).
+Independent human ground-truth approval is **pending**. This is an author-prepared held-out
 candidate, not an independently validated benchmark. Do not tune prompts against
 it and then report it as unseen; if used for tuning, create a new evaluation set.
 The nine development cases still cover hostile instructions and conflict handling;
