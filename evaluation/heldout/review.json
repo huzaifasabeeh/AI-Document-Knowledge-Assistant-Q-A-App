@@ -1,0 +1,345 @@
+{
+  "review_date": "2026-10-28",
+  "reviewer": "Codex (assistant source review)",
+  "review_type": "author-side semantic and evidence review; not independent human approval",
+  "source_commit": "76426edf6b73d7c045904e28f1a51f62532f4b2e",
+  "benchmark_version": "candidate-1",
+  "human_approval": "pending",
+  "live_evaluation": "Not run",
+  "cases": [
+    {
+      "id": "H01",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf"
+      ],
+      "rationale_and_scoring": "First Tuesday for the new starter; do not invent a time or calendar date."
+    },
+    {
+      "id": "H02",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf"
+      ],
+      "rationale_and_scoring": "People Operations team; do not substitute the mentor."
+    },
+    {
+      "id": "H03",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf"
+      ],
+      "rationale_and_scoring": "Five working days before start; calendar days is not equivalent."
+    },
+    {
+      "id": "H04",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf"
+      ],
+      "rationale_and_scoring": "Room 204; no other pickup location is stated."
+    },
+    {
+      "id": "H05",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf"
+      ],
+      "rationale_and_scoring": "Both assigned team mentor and end of week two are required."
+    },
+    {
+      "id": "H06",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "travel.pdf"
+      ],
+      "rationale_and_scoring": "Department lead for domestic travel before booking."
+    },
+    {
+      "id": "H07",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "travel.pdf"
+      ],
+      "rationale_and_scoring": "PKR 12000 per night; preserve currency and per-night basis."
+    },
+    {
+      "id": "H08",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "travel.pdf"
+      ],
+      "rationale_and_scoring": "PKR 2500 per travel day; preserve currency and per-day basis."
+    },
+    {
+      "id": "H09",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "travel.pdf"
+      ],
+      "rationale_and_scoring": "Within seven calendar days after returning; not working days or before travel."
+    },
+    {
+      "id": "H10",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "travel.pdf"
+      ],
+      "rationale_and_scoring": "Both signed declaration and Finance approval are required."
+    },
+    {
+      "id": "H11",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "service.pdf"
+      ],
+      "rationale_and_scoring": "Monday–Friday and both 08:30/17:30 endpoints required; equivalent AM/PM accepted."
+    },
+    {
+      "id": "H12",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "service.pdf"
+      ],
+      "rationale_and_scoring": "Call extension 410; do not invent a complete external telephone number."
+    },
+    {
+      "id": "H13",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "service.pdf"
+      ],
+      "rationale_and_scoring": "HelpHub portal for routine requests; urgent telephone route is not equivalent."
+    },
+    {
+      "id": "H14",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "service.pdf"
+      ],
+      "rationale_and_scoring": "30-minute target first response during service hours; not guaranteed resolution."
+    },
+    {
+      "id": "H15",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "service.pdf"
+      ],
+      "rationale_and_scoring": "Unresolved urgent incident: duty manager after two hours; both details required."
+    },
+    {
+      "id": "H16",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "records.pdf"
+      ],
+      "rationale_and_scoring": "Team Vault folder; do not substitute a local folder."
+    },
+    {
+      "id": "H17",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "records.pdf"
+      ],
+      "rationale_and_scoring": "Project owner is the sole approval role; do not substitute Finance."
+    },
+    {
+      "id": "H18",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "records.pdf"
+      ],
+      "rationale_and_scoring": "72 hours; three days is an equivalent duration."
+    },
+    {
+      "id": "H19",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "records.pdf"
+      ],
+      "rationale_and_scoring": "18 months after project closure; preserve the starting event."
+    },
+    {
+      "id": "H20",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "records.pdf"
+      ],
+      "rationale_and_scoring": "Security desk within one hour of discovery; both destination and deadline required."
+    },
+    {
+      "id": "H21",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf"
+      ],
+      "rationale_and_scoring": "Introductory session maps to orientation; first Tuesday, not every Tuesday."
+    },
+    {
+      "id": "H22",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf"
+      ],
+      "rationale_and_scoring": "Same working-day deadline as H03; paraphrase must not change the unit."
+    },
+    {
+      "id": "H23",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "travel.pdf"
+      ],
+      "rationale_and_scoring": "Same calendar-day deadline as H09; after returning is the starting event."
+    },
+    {
+      "id": "H24",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "service.pdf"
+      ],
+      "rationale_and_scoring": "Target first response, not resolution, in 30 minutes during service hours."
+    },
+    {
+      "id": "H25",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "records.pdf"
+      ],
+      "rationale_and_scoring": "72 hours / three days; accept duration phrasing instead of literal After 72 hours."
+    },
+    {
+      "id": "H26",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf"
+      ],
+      "rationale_and_scoring": "Orientation timing plus mentor and checklist timing; cite onboarding pages 1 and 2."
+    },
+    {
+      "id": "H27",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "travel.pdf"
+      ],
+      "rationale_and_scoring": "Hotel cap/currency/per-night basis plus receipt deadline/unit/event; cite travel pages 1 and 2."
+    },
+    {
+      "id": "H28",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "service.pdf"
+      ],
+      "rationale_and_scoring": "Extension 410 plus escalation to duty manager after two hours; cite service pages 1 and 2."
+    },
+    {
+      "id": "H29",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "records.pdf"
+      ],
+      "rationale_and_scoring": "Project owner plus 18 months after closure; cite records pages 1 and 2."
+    },
+    {
+      "id": "H30",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf",
+        "records.pdf"
+      ],
+      "rationale_and_scoring": "Room 204 plus team Vault folder; cite onboarding page 2 and records page 1."
+    },
+    {
+      "id": "H31",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf"
+      ],
+      "rationale_and_scoring": "Orientation schedule and organizer are provided; its duration is absent."
+    },
+    {
+      "id": "H32",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf"
+      ],
+      "rationale_and_scoring": "Equipment request deadline/location are provided; replacement budget is absent."
+    },
+    {
+      "id": "H33",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "travel.pdf"
+      ],
+      "rationale_and_scoring": "Only domestic hotel cap is provided; do not transfer it to international travel."
+    },
+    {
+      "id": "H34",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "travel.pdf"
+      ],
+      "rationale_and_scoring": "Hotel/meals/receipts are covered; personal-car mileage rate is absent."
+    },
+    {
+      "id": "H35",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "service.pdf"
+      ],
+      "rationale_and_scoring": "Routine submission channel is provided; 30-minute target applies only to urgent incidents."
+    },
+    {
+      "id": "H36",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "service.pdf"
+      ],
+      "rationale_and_scoring": "Weekday opening hours and urgent extension are provided; no Sunday support number is established. A limitation response may mention weekday hours, but must not assert extension 410 operates Sunday. Internal status remains not_found."
+    },
+    {
+      "id": "H37",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "records.pdf"
+      ],
+      "rationale_and_scoring": "Storage location is named, but its encryption algorithm is absent."
+    },
+    {
+      "id": "H38",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "records.pdf"
+      ],
+      "rationale_and_scoring": "Disclosure reporting deadline exists, but a financial penalty is absent."
+    },
+    {
+      "id": "H39",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf",
+        "travel.pdf",
+        "service.pdf",
+        "records.pdf"
+      ],
+      "rationale_and_scoring": "All four assigned PDFs reviewed: no annual leave entitlement. Do not import the 20 days from development leave.pdf."
+    },
+    {
+      "id": "H40",
+      "decision": "retain",
+      "assigned_files_reviewed": [
+        "onboarding.pdf",
+        "travel.pdf",
+        "service.pdf",
+        "records.pdf"
+      ],
+      "rationale_and_scoring": "All four assigned PDFs reviewed: no named chief executive. Generic roles do not identify a person."
+    }
+  ],
+  "questions_sha256": "a606a745e8f812e65efded3ec942c419afe33b8bc75263fd3169288b0386c25e",
+  "pdf_sha256": {
+    "onboarding.pdf": "e7a42eaa29c7a00899e751666e2e8e04cc506e4d0c2a1ff48e6f409bd810e3aa",
+    "travel.pdf": "36d645566630df1f4ac0f45b632d3e0514a1d8a1a7b777bfc60cd4799dc40058",
+    "service.pdf": "008fbcc261f92777d03edb8febb325b5502f3b03df4e956a9b9c9f1eb6193a63",
+    "records.pdf": "cfe8f525a0b1be6627c134ab66c87ff0656c99eb17d309cab78d3949ffaf8e7a"
+  }
+}
