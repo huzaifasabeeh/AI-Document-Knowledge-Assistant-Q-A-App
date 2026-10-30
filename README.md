@@ -2,8 +2,9 @@
 
 Streamlit UI with Python, LangChain, session-scoped Chroma retrieval, PDF page
 citations, Supabase accounts and private saved PDFs/chat. OpenAI is the default;
-optional Gemini support is implemented. Local Supabase workflows and one real
-Gemini answer with saved-source recovery are verified. Broader answer-quality
+optional Gemini support is implemented. Local Supabase workflows, real Gemini
+answers, subsequent-turn autosave and source recovery after restored-PDF
+reindexing are verified. Broader answer-quality
 evaluation and hosted deployment acceptance remain pending.
 
 ## Current status — 30 October 2026

@@ -7,9 +7,10 @@ logs/pr-review/local_setup_progress_before_pr_review.md.
 
 ## Status and limits
 
-Local Supabase verification and the one-question live Gemini smoke passed.
-The real saved workspace remains in the local A account for owner review.
-Its exact title/UUID are in the ignored Gemini smoke evidence; preserve it.
+Local Supabase verification, the original one-question live Gemini smoke and the
+three-answer conversation-persistence follow-up passed. Both real saved
+workspaces remain in the local A account for owner review. Their exact titles/UUIDs
+are in the ignored Gemini smoke evidence; preserve them.
 The existing user Streamlit app and Docker stack are not replaced by review tests.
 
 This does not complete the 40-question evaluation, production deployment
@@ -32,6 +33,7 @@ Playwright 1.56.0 and Chromium 141.0.7390.37.
 | Expanded normal-user API suite | 50 assertions passed in both account directions |
 | Browser save/restore/reset/export/isolation/deletion | 21 checks passed; that run used an explicitly synthetic chat fixture |
 | Focused real Gemini browser smoke | Eight checks passed: indexing, answer/citation/passage, UI save, logout/login and exact recovery |
+| Conversation-persistence follow-up | 11 checks passed: three real answers, subsequent-turn autosave, both exact restores and restored-PDF reindexing |
 | Previous full offline suite | 70 passed in 33.76s |
 | Initial secure-helper tests | 13 passed in 0.13s; expanded during review |
 
@@ -90,7 +92,47 @@ No account login, document mutation or new provider request was made by the gate
 The example configuration was accepted by CLI status against existing containers;
 this is parser validation, not a fresh migration replay. Pull-request CI is the
 status source for its exact candidate commit. Completed provider/API suites were
-not rerun merely to refresh historical evidence.
+not rerun merely to refresh historical evidence. The follow-up below closes only
+the two remaining conversation-persistence gaps.
+
+## Conversation-persistence follow-up
+
+On 30 October 2026, the hardened local launcher ran against local Supabase only.
+Application revision: 05d0a1369cd976dd3a5f326233c9ad1993f01a45; application code
+was unchanged. The smoke harness was a working change, with executed SHA-256
+02eaa8b74e5206529adcd99f4f753140c480d98cfab34ecc84fcd6dff67246d6.
+The evidence records HEAD, tracked changes and hashes of every executed app/source
+module and the launcher. Those source hashes were rechecked after the run.
+
+Actual result: PASS, 11 checks. A new uniquely named workspace was created through
+the UI after the first real answer. The second question asked who approves leave
+requests; Gemini answered manager approval with leave.pdf page 2 and its exact
+supporting passage. Without clicking Save chat now, the normal-user API recovered
+both exact rendered turns and source records. Logout/login and UI restore recovered
+those same records and PDF bytes; the question input was correctly disabled.
+
+After explicit consent, real Gemini embeddings re-indexed the restored PDF without
+changing the transcript. A new annual-leave question received the real 20-days
+answer with page 1 and supporting text. All three turns automatically persisted
+to the same workspace without another manual save. A second logout/login and UI
+restore recovered all six messages, exact source records and original PDF bytes.
+Every supporting passage was checked against its physical PDF page.
+
+The prior retained workspace's complete row and PDF fingerprints were unchanged.
+The new conversation workspace is also retained; no workspace was deleted. Browser
+and witness sessions signed out, the owned child stopped, and the original app's
+port 8501 remained reachable. No application fix was needed. The harness now reads
+the rendered transcript independently of API reads, validates ordered answers and
+sources, and prevents PASS when preservation or cleanup is unconfirmed.
+
+Private evidence: logs/local-verification/gemini-smoke-20261030T174319Z-3525b7df/.
+It contains evidence.json, two-/three-turn transcripts, the restored transcript,
+screenshots and the controlled child's log. It is ignored, not part of the PR.
+Relevant offline checks: 32 passed in 2.09s (18 existing launcher/result checks and
+14 new conversation/source checks). No unrelated API/isolation/browser suite was
+repeated. One PDF and three supported questions do not constitute the 40-question
+evaluation or production acceptance; current credentials/quota are not guaranteed
+for future runs.
 
 ## Reproducible local setup
 
@@ -156,6 +198,8 @@ Run checks only when changes or failures justify them:
 .\.venv\Scripts\python.exe scripts/local_access_check.py --credentials-file data/private/local-test-credentials.json
 .\.venv\Scripts\python.exe -m scripts.local_browser_check
 .\.venv\Scripts\python.exe -m scripts.local_gemini_smoke
+# Optional focused autosave + restored-PDF reindex follow-up; real provider calls:
+.\.venv\Scripts\python.exe -m scripts.local_gemini_smoke --conversation-persistence
 ~~~
 
 The API/full browser checks clean only their own generated resources. The focused
@@ -179,6 +223,6 @@ Restored PDFs require re-indexing before a new question; saved chat stays visibl
    authorized target. Record retained-data compatibility and rollback evidence.
    See the [release runbook](13_release_and_evaluation.md).
 
-Subsequent-turn autosave and new questions after re-indexing a restored workspace
-remain separate from the one-question smoke. No broader evaluation score or
-production acceptance is claimed.
+Subsequent-turn autosave and new questions after re-indexing are verified by the
+focused follow-up above. No broader evaluation score or production acceptance is
+claimed.

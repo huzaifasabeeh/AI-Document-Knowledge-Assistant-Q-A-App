@@ -3,11 +3,13 @@
 Run with the project Python: python -m scripts.local_gemini_smoke
 Successful saved workspaces are retained for local handover; no broad cleanup.
 """
+import argparse
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
 from pathlib import Path
 import re
+import subprocess
 import time
 from urllib.parse import quote
 from uuid import uuid4
@@ -21,6 +23,13 @@ from scripts.local_test_app import (LocalSetupBlocked, LocalTestApp,
 ROOT = Path(__file__).resolve().parents[1]
 API = 'http://127.0.0.1:54321'
 QUESTION = 'How many days of annual leave do employees receive?'
+SECOND_QUESTION = 'Who must approve leave requests?'
+THIRD_QUESTION = 'What is the annual leave entitlement stated in the PDF?'
+CONVERSATION_CASES = (
+    (QUESTION, r'\b20\s+days\b', 1, '20 days'),
+    (SECOND_QUESTION, r'\bmanager\b', 2, 'manager approval'),
+    (THIRD_QUESTION, r'\b20\s+days\b', 1, '20 days'),
+)
 
 
 class Blocked(Exception):
@@ -32,14 +41,16 @@ def require(condition, label):
         raise AssertionError(label)
 
 
-def verify_answer(messages, pdf):
+def verify_answer(messages, pdf, case=CONVERSATION_CASES[0]):
     """Check this sample's answer and every saved passage against physical pages."""
-    require(len(messages) == 2 and messages[0] == {'role': 'user', 'content': QUESTION},
+    question, pattern, required_page, required_passage = case
+    require(len(messages) == 2 and messages[0] == {'role': 'user', 'content': question},
             'Expected the real question and exactly one answer.')
     answer = messages[1]
-    require(answer['role'] == 'assistant' and re.search(r'\b20\s+days\b', answer['content'], re.I),
-            'The real answer must state the sample allowance.')
-    require('Sources: leave.pdf, PDF page 1' in answer['content'], 'The sample citation is missing.')
+    require(answer['role'] == 'assistant' and re.search(pattern, answer['content'], re.I),
+            'The real answer must state the sample allowance or approval requirement.')
+    require('Sources:' in answer['content'] and
+            f'leave.pdf, PDF page {required_page}' in answer['content'], 'The sample citation is missing.')
     sources = answer.get('sources', [])
     require(bool(sources), 'Supporting passages are missing.')
     pages = PdfReader(pdf).pages
@@ -50,24 +61,48 @@ def verify_answer(messages, pdf):
         require(1 <= source['page'] <= len(pages), 'Source page is outside the PDF.')
         require(normalize(source['text']) in normalize(pages[source['page'] - 1].extract_text()),
                 'Supporting passage does not occur on its cited page.')
-    require(any(source['page'] == 1 and '20 days' in source['text'] for source in sources),
+    require(any(source['page'] == required_page and required_passage in source['text'] for source in sources),
             'The sample supporting passage is missing.')
 
 
+def verify_conversation(messages, pdf, cases):
+    require(len(messages) == 2 * len(cases), 'The saved conversation has a missing or extra turn.')
+    for index, case in enumerate(cases):
+        verify_answer(messages[2 * index:2 * index + 2], pdf, case)
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--conversation-persistence', action='store_true',
+                        help='Also verify subsequent-turn autosave and asking after restored-PDF reindexing.')
+    args = parser.parse_args()
     from playwright.sync_api import expect, sync_playwright
 
     stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     output = ROOT / 'logs/local-verification' / ('gemini-smoke-' + stamp + '-' + uuid4().hex[:8])
     output.mkdir(parents=True, exist_ok=False)
-    title = 'Live Gemini smoke ' + stamp + '-' + uuid4().hex[:8]
+    title = ('Gemini conversation persistence ' if args.conversation_persistence else 'Live Gemini smoke ') + stamp + '-' + uuid4().hex[:8]
     evidence = {'result': 'INCOMPLETE', 'app_url': None, 'supabase_url': API,
                 'workspace_title': title, 'workspace_id': None, 'checks': [],
                 'answer_origin': 'Real Gemini through Streamlit; no fixture fallback'}
+    evidence['mode'] = 'conversation-persistence' if args.conversation_persistence else 'one-turn'
+    evidence['tested_revision'] = subprocess.run(
+        ['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+    # Hash actual executable sources as well as HEAD: a live run may include an
+    # uncommitted harness change. Do not describe that as a clean revision test.
+    paths = [ROOT / 'app.py', *sorted((ROOT / 'src/knowledge_assistant').glob('*.py')),
+             Path(__file__).resolve(), ROOT / 'scripts/local_test_app.py']
+    evidence['source_sha256'] = {path.relative_to(ROOT).as_posix(): sha256(path.read_bytes()).hexdigest()
+                                 for path in paths}
+    evidence['tracked_changes'] = subprocess.run(
+        ['git', 'diff', '--name-only', 'HEAD'], cwd=ROOT, capture_output=True, text=True,
+        check=True).stdout.splitlines()
     page = browser = playwright = client = store = token = None
     app = None
     step, complete, failed = 'configuration', False, False
     sensitive = []
+    original_rows = None
+    original_pdfs = {}
 
     def record():
         text = json.dumps(evidence, indent=2) + '\n'
@@ -111,6 +146,82 @@ def main():
         expect(panel).to_contain_text('PDF page 1')
         expect(panel).to_contain_text('20 days')
 
+    def displayed_conversation():
+        """Read actual rendered answers and sources, independently of the DB."""
+        messages = []
+        cards = page.get_by_test_id('stChatMessage')
+        for index in range(cards.count()):
+            card = cards.nth(index)
+            message = {'role': 'user' if index % 2 == 0 else 'assistant',
+                       'content': card.get_by_test_id('stText').first.inner_text()}
+            if index % 2:
+                panel = card.get_by_test_id('stExpander').filter(has_text='View supporting passages')
+                expect(panel).to_have_count(1)
+                if panel.locator('details').get_attribute('open') is None:
+                    panel.locator('summary').click()
+                captions = panel.get_by_test_id('stCaptionContainer').all_text_contents()
+                passages = panel.get_by_test_id('stText').all_text_contents()
+                require(len(captions) == len(passages) and bool(passages),
+                        'The displayed answer is missing source identities or passages.')
+                sources = []
+                for caption, passage in zip(captions, passages):
+                    match = re.fullmatch(r'(.+)\s+·\s+PDF page (\d+)', caption.strip())
+                    require(match is not None, 'The displayed source identity is invalid.')
+                    sources.append({'filename': match[1], 'page': int(match[2]), 'text': passage})
+                message['sources'] = sources
+            messages.append(message)
+        return messages
+
+    def snapshot(label, messages):
+        text = json.dumps(messages, indent=2) + '\n'
+        require(not any(secret and secret in text for secret in sensitive),
+                'Secret boundary check failed; transcript not written.')
+        (output / (label + '.json')).write_text(text, encoding='utf-8')
+        evidence.setdefault('transcript_sha256', {})[label] = sha256(text.encode()).hexdigest()
+
+    def verify_saved(messages):
+        uploads, saved = store.load(evidence['workspace_id'])
+        require(len(uploads) == 1 and uploads[0].data == sample.read_bytes(), 'The saved PDF changed.')
+        require(saved == messages, 'Automatic save did not persist the exact displayed conversation and sources.')
+
+    def pdf_fingerprints(workspace_id):
+        uploads, _ = store.load(workspace_id)
+        return [{'name': upload.name, 'sha256': sha256(upload.data).hexdigest()} for upload in uploads]
+
+    def restore(messages):
+        logout()
+        login()
+        saved_controls()
+        click('Refresh saved workspaces')
+        settled()
+        box = page.get_by_role('combobox', name='Choose saved workspace', exact=True)
+        expect(box).to_be_visible()
+        if not box.input_value().startswith(title):
+            box.fill(title)
+            box.press('ArrowDown')
+            page.get_by_role('option').filter(has_text=title).click()
+        expect(box).to_have_value(re.compile('^' + re.escape(title) + r'(?:\s|$)'))
+        click('Open saved workspace')
+        expect(page.get_by_test_id('stChatMessage')).to_have_count(len(messages))
+        settled()
+        require(displayed_conversation() == messages, 'Restore changed displayed messages or source records.')
+        expect(page.get_by_placeholder('Ask about your indexed PDFs')).to_be_disabled()
+        verify_saved(messages)
+
+    def ask(case, previous):
+        question = page.get_by_placeholder('Ask about your indexed PDFs')
+        expect(question).to_be_enabled()
+        question.fill(case[0])
+        question.press('Enter')
+        wait_for_provider(lambda: page.get_by_test_id('stChatMessage').count() == len(previous) + 2)
+        settled()
+        messages = displayed_conversation()
+        require(messages[:-2] == previous, 'A subsequent question changed an earlier conversation turn.')
+        verify_conversation(messages, sample, CONVERSATION_CASES[:len(messages) // 2])
+        # Deliberately no Save chat now: this read must witness automatic saving.
+        verify_saved(messages)
+        return messages
+
     def wait_for_provider(predicate, seconds=160):
         deadline = time.monotonic() + seconds
         while time.monotonic() < deadline:
@@ -142,6 +253,19 @@ def main():
         token, user = client.login('qa-a@example.com', credentials['password_a'])
         sensitive.append(token)
         store = WorkspaceStore(API, client.key, token, user['id'])
+        if args.conversation_persistence:
+            # Read-only fingerprints ensure pre-existing workspaces, including
+            # the retained review workspace, remain byte-for-byte unchanged.
+            rows = store.request('/rest/v1/saved_workspaces?select=*')
+            original_rows = {row['id']: row for row in rows}
+            evidence['preexisting_workspace_count'] = len(original_rows)
+            evidence['preexisting_rows_sha256'] = sha256(json.dumps(
+                original_rows, sort_keys=True).encode()).hexdigest()
+            require(not any(row['title'] == title for row in rows), 'The unique test workspace already exists.')
+            original_pdfs = {key: pdf_fingerprints(key) for key, row in original_rows.items()
+                             if row['status'] == 'ready'}
+            evidence['preexisting_pdfs_sha256'] = sha256(json.dumps(
+                original_pdfs, sort_keys=True).encode()).hexdigest()
         check('Local Supabase and complete Gemini configuration confirmed')
 
         step = 'controlled local app startup'
@@ -189,41 +313,58 @@ def main():
         uploads, messages = store.load(rows[0]['id'])
         require(len(uploads) == 1 and uploads[0].data == sample.read_bytes(), 'The saved PDF changed.')
         verify_answer(messages, sample)
-        transcript = json.dumps(messages, indent=2) + '\n'
-        require(not any(secret and secret in transcript for secret in sensitive),
-                'Secret boundary check failed; transcript not written.')
-        (output / 'real-conversation.json').write_text(transcript, encoding='utf-8')
+        require(displayed_conversation() == messages, 'UI save changed the displayed conversation or sources.')
+        snapshot('real-conversation', messages)
         check('UI save persisted exact PDF and real answer with valid page citations/passages')
 
-        step = 'logout/login and restore real conversation'
-        logout()
-        check('A logged out after saving the real conversation')
-        login()
-        saved_controls()
-        click('Refresh saved workspaces')
-        settled()
-        box = page.get_by_role('combobox', name='Choose saved workspace', exact=True)
-        expect(box).to_be_visible()
-        if not box.input_value().startswith(title):
-            box.fill(title)
-            box.press('ArrowDown')
-            page.get_by_role('option').filter(has_text=title).click()
-        expect(box).to_have_value(re.compile('^' + re.escape(title) + r'(?:\s|$)'))
-        click('Open saved workspace')
-        expect(page.get_by_test_id('stChatMessage')).to_have_count(2)
-        settled()
-        body = page.locator('body').inner_text()
-        require(all(message['content'] in body for message in messages), 'The displayed conversation changed.')
-        source_panel()
-        restored_uploads, restored_messages = store.load(rows[0]['id'])
-        require(restored_messages == messages and restored_uploads[0].data == sample.read_bytes(),
-                'The restored conversation or PDF changed.')
-        verify_answer(restored_messages, sample)
-        check('Logout/login restore recovered the exact real answer, citations, passages and PDF')
-        page.screenshot(path=str(output / 'restored-real-answer.png'), full_page=True)
-        logout()
-        check('Browser ended signed out; saved real workspace retained for handover')
-        complete = True
+        if args.conversation_persistence:
+            step = 'subsequent real question and automatic save'
+            messages = ask(CONVERSATION_CASES[1], messages)
+            snapshot('two-turn-conversation', messages)
+            check('Second real Gemini answer and sources automatically saved to the same workspace')
+            page.screenshot(path=str(output / 'two-turn-answer.png'), full_page=True)
+
+            step = 'first logout/login and exact two-turn restore'
+            restore(messages)
+            check('First logout/login restored both exact turns, sources and PDF; chat required reindexing')
+            page.screenshot(path=str(output / 'restored-two-turns.png'), full_page=True)
+
+            step = 'reindex restored PDF without changing recovered conversation'
+            consent = 'I agree to send these documents and questions to Google Gemini.'
+            page.get_by_text(consent, exact=True).click()
+            expect(page.get_by_role('checkbox', name=consent, exact=True)).to_be_checked()
+            click('Index documents')
+            wait_for_provider(lambda: page.get_by_placeholder('Ask about your indexed PDFs').is_enabled())
+            settled()
+            require(displayed_conversation() == messages, 'Reindexing changed the recovered conversation or sources.')
+            verify_saved(messages)
+            check('Real Gemini reindexing of the restored PDF preserved both saved turns and sources')
+
+            step = 'new question after restore/reindex and automatic save'
+            messages = ask(CONVERSATION_CASES[2], messages)
+            snapshot('three-turn-conversation', messages)
+            check('New real answer after restored-PDF reindexing automatically saved with all three turns')
+            page.screenshot(path=str(output / 'three-turn-answer.png'), full_page=True)
+
+            step = 'second logout/login and exact three-turn restore'
+            restore(messages)
+            verify_conversation(messages, sample, CONVERSATION_CASES)
+            snapshot('restored-three-turn-conversation', displayed_conversation())
+            check('Second logout/login recovered all three exact real turns, citations, passages and PDF')
+            page.screenshot(path=str(output / 'restored-three-turns.png'), full_page=True)
+            logout()
+            check('Browser ended signed out; unique conversation workspace retained for review')
+            complete = True
+
+        if not args.conversation_persistence:
+            step = 'logout/login and restore real conversation'
+            restore(messages)
+            verify_answer(messages, sample)
+            check('Logout/login restore recovered the exact real answer, citations, passages and PDF')
+            page.screenshot(path=str(output / 'restored-real-answer.png'), full_page=True)
+            logout()
+            check('Browser ended signed out; saved real workspace retained for handover')
+            complete = True
     except Blocked as error:
         failed = True
         evidence['result'] = 'BLOCKED'
@@ -240,6 +381,17 @@ def main():
         evidence['failure'] = {'step': step, 'type': type(error).__name__}
         print('FAIL:', step, '(' + type(error).__name__ + ')', flush=True)
     finally:
+        if original_rows is not None:
+            try:
+                current = {row['id']: row for row in store.request('/rest/v1/saved_workspaces?select=*')}
+                require(all(current.get(key) == row for key, row in original_rows.items()),
+                        'A pre-existing workspace changed during focused verification.')
+                require(all(pdf_fingerprints(key) == fingerprints for key, fingerprints in original_pdfs.items()),
+                        'A pre-existing workspace PDF changed during focused verification.')
+                evidence['preexisting_workspaces_unchanged'] = True
+            except Exception:
+                failed = True
+                evidence['preexisting_workspaces_preservation_unconfirmed'] = True
         # An evidence screenshot failure must not prevent the signout attempt.
         if failed and page is not None and not page.is_closed():
             try:

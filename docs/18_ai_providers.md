@@ -1,7 +1,8 @@
 # AI provider configuration
 
-Local validation update, 30 October 2026: Gemini real indexing, a cited answer,
-UI workspace/conversation save and logout/login recovery passed against local
+Local validation update, 30 October 2026: Gemini real indexing, cited answers,
+UI workspace/conversation save, subsequent-turn autosave, restored-PDF reindexing
+and both logout/login recoveries passed against local
 Supabase using `gemini-3.5-flash-lite` and `gemini-embedding-001`. Models were checked
 against current official Google docs and the account's model listing. See the
 [local progress report](local_setup_progress.md) for evidence and limits; this is
@@ -39,7 +40,8 @@ openai_assistant factory remains OpenAI-only for existing callers; the app and
 opt-in smoke script use configured_assistant.
 
 The original provider implementation had syntax-only validation. The later local
-smoke above verifies one real answer, structured output and saved-source recovery;
+smokes above verify three supported conversation turns, structured output,
+automatic saving and exact saved-source recovery;
 broader grounding/citation quality and ongoing quota remain separate checks.
 
 Reference: https://ai.google.dev/gemini-api/docs/openai (25 October 2026).
