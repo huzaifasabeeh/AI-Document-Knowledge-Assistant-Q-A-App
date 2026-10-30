@@ -72,6 +72,18 @@
       "page_id": "3fbfe7abcf1d81f592afdb80265a552a",
       "status": "Completed",
       "managed": true
+    },
+    {
+      "name": "Add signup, login and logout",
+      "page_id": "402fe7abcf1d813baa3fdf4274cb312c",
+      "status": "Completed",
+      "managed": true
+    },
+    {
+      "name": "Add persistent user documents and chat history",
+      "page_id": "402fe7abcf1d81fc9103dacf26983df9",
+      "status": "In progress",
+      "managed": true
     }
   ]
 }

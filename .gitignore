@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 .streamlit/secrets.toml
+.streamlit/secrets*
+# Machine-local CLI settings are created from the reviewed example.
+/supabase/config.toml
 
 # Python and editor files
 __pycache__/
@@ -21,6 +24,7 @@ data/uploads/
 chroma_db/
 indexes/
 logs/
+document-chat*.txt
 
 # Generated inspection output
 *.inspect.ndjson

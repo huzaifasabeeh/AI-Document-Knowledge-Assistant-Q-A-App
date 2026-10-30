@@ -1,2 +1,6 @@
 # Preserve PDF byte offsets on every platform.
 *.pdf binary
+
+# These benchmark inputs are byte-hashed in the reviewed manifest.
+/evaluation/heldout/corpus.json text eol=lf
+/evaluation/heldout/questions.json text eol=lf

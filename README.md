@@ -35,6 +35,43 @@ The repository now includes a Python/Streamlit document Q&A prototype with PDF e
 Run `pip install -r requirements-lock.txt`, configure `OPENAI_API_KEY` in your environment, then run `streamlit run app.py`. Run offline checks with `python -m pytest -q`.
 
 GitHub-to-Notion task statuses are maintained in `project/tasks.json`. Automatic sync still requires the separate `NOTION_TOKEN` repository secret and tracker access; see [sync setup](docs/07_notion_sync_setup.md). Completion of a push is not evidence that either provider integration succeeded.
+# AI Document Knowledge Assistant & Q&A App
+
+Streamlit UI with Python, LangChain, session-scoped Chroma retrieval, PDF page
+citations, Supabase accounts and private saved PDFs/chat. OpenAI is the default;
+optional Gemini support is implemented. Local Supabase workflows, real Gemini
+answers, subsequent-turn autosave and source recovery after restored-PDF
+reindexing are verified. Broader answer-quality
+evaluation and hosted deployment acceptance remain pending.
+
+## Current status — 30 October 2026
+
+PRs #5 (saved-document binding) and #6 (provider selection) are merged. Their
+automated checks passed. The owner reported signup/login/logout working; the
+public login page was observed loading. The later local verification is recorded
+in the checkpoint below. Exact deployed revision and production acceptance have
+not been verified by those local checks.
+
+- [Recovered database setup](docs/20_database_setup.md)
+- [Local setup and acceptance checkpoint](docs/local_setup_progress.md)
+- [40-question evaluation candidate](evaluation/heldout/README.md)
+- [Requirements review and remaining work](docs/19_requirements_review.md)
+- [User guide](docs/12_user_guide.md)
+- [Account setup](docs/16_account_auth.md)
+- [Saved workspaces and deletion](docs/17_saved_workspaces.md)
+- [AI provider settings](docs/18_ai_providers.md)
+- [Release and evaluation runbook](docs/13_release_and_evaluation.md)
+
+Install `requirements-lock.txt`, configure Supabase and the selected AI provider
+through environment variables or Streamlit Secrets, then run
+`python -m streamlit run app.py`. A `.env` file is not loaded automatically.
+Preview needs account access but makes no AI API calls. Configure a working AI
+key and models before indexing. Never commit credentials or client documents.
+Install `requirements-dev.txt` and run `python -m pytest -q` for offline checks.
+
+`project/tasks.json` controls GitHub-to-Notion status sync. Sync requires its own
+repository secret and tracker access; see [setup](docs/07_notion_sync_setup.md).
+Do not mark live acceptance complete from code changes or CI alone.
 
 ---
 

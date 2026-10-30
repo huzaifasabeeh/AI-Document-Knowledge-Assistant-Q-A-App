@@ -1,0 +1,12 @@
+{
+  "version": "candidate-1",
+  "status": "candidate; reviewer approval pending",
+  "pdf_sha256": {
+    "onboarding.pdf": "e7a42eaa29c7a00899e751666e2e8e04cc506e4d0c2a1ff48e6f409bd810e3aa",
+    "travel.pdf": "36d645566630df1f4ac0f45b632d3e0514a1d8a1a7b777bfc60cd4799dc40058",
+    "service.pdf": "008fbcc261f92777d03edb8febb325b5502f3b03df4e956a9b9c9f1eb6193a63",
+    "records.pdf": "cfe8f525a0b1be6627c134ab66c87ff0656c99eb17d309cab78d3949ffaf8e7a"
+  },
+  "corpus.json_sha256": "436dd06da195eba1f05a96be3644b8697923d1572e77ee4419b9a03323fad05b",
+  "questions.json_sha256": "a606a745e8f812e65efded3ec942c419afe33b8bc75263fd3169288b0386c25e"
+}

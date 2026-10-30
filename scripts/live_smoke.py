@@ -2,12 +2,13 @@
 import json
 import sys
 from pathlib import Path
-from src.knowledge_assistant.core import Upload, openai_assistant
+from src.knowledge_assistant.core import Upload
+from src.knowledge_assistant.providers import configured_assistant
 
 
 def main():
     root = Path(__file__).resolve().parents[1]
-    engine = openai_assistant()
+    engine = configured_assistant()
     results = []
     try:
         engine.ingest([Upload('leave.pdf', (root / 'data/sample_pdfs/leave.pdf').read_bytes())])
