@@ -1,0 +1,50 @@
+# Local rehearsal only. Copy to config.toml if it does not already exist.
+# Keep Docker Desktop's localhost-only published-port setting enabled.
+# No hosted project link, production URL or credential belongs in this file.
+project_id = "AI-Document-Knowledge-Assistant-Q-A-App"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.seed]
+enabled = false
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1:54321"
+
+[local_smtp]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+file_size_limit = "10MiB"
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:8501"
+additional_redirect_urls = ["http://localhost:8501"]
+enable_signup = true
+enable_anonymous_sign_ins = false
+
+[auth.email]
+enable_signup = true
+# Test accounts only. Do not apply these local settings to a hosted project.
+enable_confirmations = false
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false

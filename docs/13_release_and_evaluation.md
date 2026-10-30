@@ -2,9 +2,11 @@
 
 ## Current boundary
 
-Development may proceed while detailed manual testing is paused, as requested
-on 19 October 2026. Offline tests remain part of each change. No live model
-result, deployment or client approval is claimed by this document.
+The earlier manual-testing pause from 19 October 2026 was followed by completed
+local Supabase checks, a live Gemini smoke and a three-answer conversation
+persistence follow-up; see the
+[local checkpoint](local_setup_progress.md). Offline tests remain part of each
+change. Broader evaluation, deployment acceptance and client approval are pending.
 
 ## Use the right evaluation corpus
 
@@ -16,7 +18,8 @@ the Week 2 PDFs, which state 20 days and 30 days.
 answers, source filenames, physical page numbers and evidence text. It includes
 single/multiple documents, missing information, conflict and hostile content.
 An offline test checks its evidence against actual PDFs. This verifies the test
-fixtures only; every live result remains **Not run**.
+fixtures only. No complete nine-case live evaluation is recorded; the focused
+local smokes are reported separately and do not close the 40-question evaluation.
 
 ## Deferred acceptance session
 

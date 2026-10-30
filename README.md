@@ -2,17 +2,21 @@
 
 Streamlit UI with Python, LangChain, session-scoped Chroma retrieval, PDF page
 citations, Supabase accounts and private saved PDFs/chat. OpenAI is the default;
-optional Gemini support is implemented. Provider access and full live acceptance
-remain pending; implementation is not proof of answer quality or isolation.
+optional Gemini support is implemented. Local Supabase workflows, real Gemini
+answers, subsequent-turn autosave and source recovery after restored-PDF
+reindexing are verified. Broader answer-quality
+evaluation and hosted deployment acceptance remain pending.
 
-## Current status — 26 October 2026
+## Current status — 30 October 2026
 
 PRs #5 (saved-document binding) and #6 (provider selection) are merged. Their
 automated checks passed. The owner reported signup/login/logout working; the
-public login page was observed loading. Exact latest deployment, saved-workspace
-flows and real provider answers have not completed final acceptance.
+public login page was observed loading. The later local verification is recorded
+in the checkpoint below. Exact deployed revision and production acceptance have
+not been verified by those local checks.
 
 - [Recovered database setup](docs/20_database_setup.md)
+- [Local setup and acceptance checkpoint](docs/local_setup_progress.md)
 - [40-question evaluation candidate](evaluation/heldout/README.md)
 - [Requirements review and remaining work](docs/19_requirements_review.md)
 - [User guide](docs/12_user_guide.md)
