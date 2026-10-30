@@ -144,3 +144,55 @@ def test_http_failure_does_not_leak_provider_body(monkeypatch):
 def test_invalid_config_rejected(url, key):
     with pytest.raises(AuthError):
         AuthClient(url, key)
+
+
+@pytest.mark.parametrize('url', ['http://127.0.0.1:54321', 'http://[::1]:54321', 'http://localhost:54321'])
+def test_loopback_http_supports_auth_and_workspace_store(url):
+    from src.knowledge_assistant.persistence import WorkspaceStore
+    assert AuthClient(url, 'sb_publishable_test').url == url
+    store = WorkspaceStore(url, 'sb_publishable_test', 'test-token',
+                           'fe00fd2f-85cf-4ab0-be74-887b93108b21')
+    assert store.url == url
+
+
+@pytest.mark.parametrize('url', [
+    'http://192.168.1.5:54321', 'http://0.0.0.0:54321',
+    'http://127.0.0.1.example.com:54321', 'http://localhost.example.com',
+    'http://127.0.0.1@remote.example.com', 'http://user@127.0.0.1:54321',
+    'http://127.0.0.1:54321/rest/v1', 'http://127.0.0.1:54321?key=bad',
+    'http://127.0.0.1:54321#fragment',
+    'http://127.0.0.1:bad', 'http://127.0.0.1:65536', 'http://127.0.0.1:0',
+    'http://127.0.0.1:', 'http://127.0.0.1:-1', 'http://[::1',
+    'http://127.0.0.1\n:54321', 'http://127.0.0.1\t:54321',
+    ' http://127.0.0.1:54321', 'http://@127.0.0.1:54321',
+    'http://localhost.:54321', 'http://[::1%lo]:54321',
+    'https://remote.example.com:bad', 'https://remote.example.com:0',
+    'http://127.0.0.1:54321?', 'http://127.0.0.1:54321#',
+])
+def test_loopback_exception_rejects_remote_or_ambiguous_urls(url):
+    from src.knowledge_assistant.persistence import WorkspaceStore
+    with pytest.raises(AuthError):
+        AuthClient(url, 'sb_publishable_test')
+    with pytest.raises(AuthError):
+        WorkspaceStore(url, 'sb_publishable_test', 'test-token',
+                       '00000000-0000-4000-8000-000000000001')
+
+
+def test_remote_supabase_requires_https():
+    url = 'https://example.supabase.co:443'
+    assert AuthClient(url, 'sb_publishable_test').url == url
+    with pytest.raises(AuthError):
+        AuthClient('http://example.supabase.co:443', 'sb_publishable_test')
+
+
+def test_loopback_requests_bypass_proxies_and_refuse_redirects(monkeypatch):
+    from urllib.request import ProxyHandler
+    from src.knowledge_assistant.auth import NoRedirect, supabase_opener
+    factory = Mock()
+    monkeypatch.setattr('src.knowledge_assistant.auth.build_opener', factory)
+    supabase_opener('http://127.0.0.1:54321')
+    handlers = factory.call_args.args
+    assert NoRedirect in handlers
+    assert any(isinstance(handler, ProxyHandler) and handler.proxies == {} for handler in handlers)
+    supabase_opener('https://example.supabase.co')
+    assert factory.call_args.args == (NoRedirect,)

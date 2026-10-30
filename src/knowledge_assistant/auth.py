@@ -3,7 +3,7 @@ import json
 import re
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
-from urllib.request import Request, build_opener, HTTPRedirectHandler
+from urllib.request import Request, build_opener, HTTPRedirectHandler, ProxyHandler
 
 
 class AuthError(Exception):
@@ -15,13 +15,35 @@ class NoRedirect(HTTPRedirectHandler):
         return None
 
 
+LOOPBACK_HOSTS = {'127.0.0.1', '::1', 'localhost'}
+
+
+def supabase_opener(url):
+    # Keep local account tokens and PDF bytes off configured HTTP proxies.
+    handlers = [NoRedirect]
+    if urlsplit(url).hostname in LOOPBACK_HOSTS:
+        handlers.append(ProxyHandler({}))
+    return build_opener(*handlers)
+
+
 class AuthClient:
     def __init__(self, url, key):
-        parts = urlsplit(url)
-        if (parts.scheme != 'https' or not parts.hostname or parts.username
-                or parts.password or parts.query or parts.fragment
+        invalid_url = 'Authentication configuration is invalid. Contact the app owner.'
+        if (not isinstance(url, str) or not url or
+                any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in url)):
+            raise AuthError(invalid_url)
+        try:
+            parts = urlsplit(url)
+            hostname, port = parts.hostname, parts.port
+        except ValueError:
+            raise AuthError(invalid_url) from None
+        local_http = parts.scheme == 'http' and parts.hostname in LOOPBACK_HOSTS
+        if ((parts.scheme != 'https' and not local_http) or not hostname
+                or parts.username is not None or parts.password is not None
+                or parts.netloc.endswith(':') or (port is not None and not 1 <= port <= 65535)
+                or '?' in url or '#' in url
                 or parts.path not in ('', '/')):
-            raise AuthError('Authentication configuration is invalid. Contact the app owner.')
+            raise AuthError(invalid_url)
         # Use a publishable key or legacy anon key, never a privileged service key.
         if not key or key.startswith('sb_secret_'):
             raise AuthError('Authentication requires a public project key.')
@@ -44,7 +66,7 @@ class AuthClient:
                       data=json.dumps(data).encode() if data is not None else None,
                       method='POST' if data is not None else 'GET')
         try:
-            with build_opener(NoRedirect).open(req, timeout=15) as response:
+            with supabase_opener(self.url).open(req, timeout=15) as response:
                 raw = response.read()
                 result = json.loads(raw) if raw else {}
                 if not isinstance(result, dict):

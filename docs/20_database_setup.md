@@ -1,5 +1,9 @@
 # Database setup and recovered history
 
+For the later local Supabase rehearsal, executed API/browser checks, environment
+and reproducible startup, see [local setup progress](local_setup_progress.md).
+The historical observations below retain their original scope and dates.
+
 ## Provenance and scope
 
 On 26 October 2026 the two existing migration bodies were recovered read-only

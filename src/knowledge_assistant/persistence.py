@@ -2,10 +2,10 @@
 import json
 from datetime import datetime, timezone
 from uuid import uuid4, UUID
-from urllib.request import Request, build_opener
+from urllib.request import Request
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
-from .auth import AuthClient, NoRedirect
+from .auth import AuthClient, supabase_opener
 from .core import Upload, extract
 
 
@@ -25,7 +25,7 @@ class WorkspaceStore:
                    'Content-Type': 'application/pdf' if binary else 'application/json',
                    'Prefer': 'return=representation'}
         try:
-            with build_opener(NoRedirect).open(Request(self.url + path, data=body,
+            with supabase_opener(self.url).open(Request(self.url + path, data=body,
                     headers=headers, method=method), timeout=45) as response:
                 raw = response.read(105000000)
                 return raw if binary and method == 'GET' else (json.loads(raw) if raw else None)

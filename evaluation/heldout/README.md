@@ -23,7 +23,8 @@ version and review; never change expectations to fit model answers.
 From repository root:
 
 ```powershell
-.\.venv\Scripts\python.exe -m scripts.prepare_evaluation --output evaluation-run.json
+New-Item -ItemType Directory -Force -Path logs/evaluation | Out-Null
+.\.venv\Scripts\python.exe -m scripts.prepare_evaluation --output logs/evaluation/run-001.json
 ```
 
 The command exclusively creates a new JSON file and refuses to overwrite one.
