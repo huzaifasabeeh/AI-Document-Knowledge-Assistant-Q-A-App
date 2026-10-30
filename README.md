@@ -1,3 +1,40 @@
+# Prototype progress
+
+The preview demo is deployed on [Streamlit Community Cloud](https://ai-document-knowledge-assistant-q-a-app-f6ozauylzvgbsqda24mnfs.streamlit.app/).
+Hosted startup was observed on 21 October; the owner subsequently reported
+successful use without a visible error. This is not final AI acceptance.
+See [hosted verification and remaining work](docs/15_hosted_status.md).
+
+Prepare a separate final evaluation worksheet without API calls:
+
+```sh
+python -m scripts.prepare_evaluation --output evaluation/review_candidate.json
+```
+
+The command preserves the nine PDF cases and their expected evidence, records
+the candidate commit, leaves every result unrun, and refuses to overwrite an
+existing review. Record results only after live testing is authorized.
+
+Deployment preparation now includes a no-network prerequisite check, a local
+launcher (`python scripts/start.py`) and optional Docker packaging. See the
+[private deployment and handoff guide](docs/14_deployment_handoff.md).
+The container has not been built or deployed. Detailed final acceptance and live AI testing
+remain pending; no release completion
+is claimed. The existing Streamlit UI remains the selected frontend.
+
+Week 3 frontend work has started: document sidebar, local page preview without API calls, status metrics, source excerpts and readable provider errors. See [frontend checkpoint and run guide](docs/11_frontend_checkpoint.md). Live AI validation and pilot evaluation remain pending.
+
+Previous maintenance checkpoint: repeat-safe cleanup, binary PDF checkout protection and
+strict sample-PDF regression checks are implemented. The offline suite now has
+26 passing tests on Linux. Windows previously passed the original 18 tests;
+the new Windows rerun is pending. Live validation is blocked by unavailable API
+credits. See [results and Windows next steps](docs/10_week2_live_test_results.md).
+
+The repository now includes a Python/Streamlit document Q&A prototype with PDF extraction, per-page chunking, session-scoped Chroma retrieval and an OpenAI structured-answer integration. See [setup and workflow](docs/08_week2_workflow.md) and [test log](docs/09_week2_test_log.md). The extraction pipeline is locally validated; live OpenAI answer quality remains unverified. API credentials are required to index documents and generate answers.
+
+Run `pip install -r requirements-lock.txt`, configure `OPENAI_API_KEY` in your environment, then run `streamlit run app.py`. Run offline checks with `python -m pytest -q`.
+
+GitHub-to-Notion task statuses are maintained in `project/tasks.json`. Automatic sync still requires the separate `NOTION_TOKEN` repository secret and tracker access; see [sync setup](docs/07_notion_sync_setup.md). Completion of a push is not evidence that either provider integration succeeded.
 # AI Document Knowledge Assistant & Q&A App
 
 Streamlit UI with Python, LangChain, session-scoped Chroma retrieval, PDF page
