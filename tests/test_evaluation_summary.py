@@ -1,5 +1,6 @@
 """Acceptance metrics must preserve missing evidence and the exact deadline."""
 import json
+from hashlib import sha256
 
 import pytest
 
@@ -13,9 +14,22 @@ def complete_records(seconds=10.0):
         'cases': [{
             'id': case_id, 'status': 'Completed', 'actual_answer': 'Synthetic response',
             'answer_seconds': seconds,
+            'is_primary': True, 'attempt_number': 1, 'retry_of': None,
         } for case_id in CASE_IDS],
         'timing_scope': TIMING_SCOPE, 'timing_clock': TIMING_CLOCK,
+        'run_status': 'COMPLETED_UNSCORED', 'selected_cases_finished': True,
+        'preexisting_workspaces_unchanged': True,
+        'workspaces_before': {'workspace_count': 2, 'row_and_pdf_sha256': 'a' * 64},
+        'workspaces_after': {'workspace_count': 2, 'row_and_pdf_sha256': 'a' * 64},
+        'provider': 'gemini', 'chat_model': 'offline-chat', 'embedding_model': 'offline-embedding',
+        'runtime_settings': {'retrieval_k': 6},
     }
+    snapshot = {'configured_models': {key: run[key] for key in ('provider', 'chat_model', 'embedding_model')},
+                'runtime_settings': run['runtime_settings'].copy(),
+                'execution_settings': {'selected_case_ids': list(CASE_IDS)},
+                'private_configuration_fingerprints': {'fixture': 'c' * 64}}
+    run['configuration_verification'] = {'status': 'VERIFIED', 'verified_configuration': snapshot,
+        'approved_configuration_sha256': sha256(json.dumps(snapshot, sort_keys=True, separators=(',', ':')).encode()).hexdigest()}
     grades = {'cases': [{
         'id': case_id, 'fully_correct_supported': True,
         'appropriate_abstention': True,
@@ -169,3 +183,82 @@ def test_summary_exclusive_creation_preserves_run_and_grades(tmp_path):
         summarize(tmp_path)
     assert (tmp_path / 'summary.json').read_bytes() == summary_bytes
     assert (run_path.read_bytes(), grades_path.read_bytes()) == before
+
+
+def test_linked_retry_never_replaces_failed_primary_in_acceptance():
+    run, grades = complete_records(1.0)
+    run['cases'][0].update(is_primary=False, attempt_number=2, primary_attempt=None,
+                           retry_of={'path': 'original-failed-primary.json'})
+    result = summarize_records(run, grades)
+    assert result['primary_provenance']['nonprimary_ids'] == ['H01']
+    assert result['quality']['answer_correctness']['numerator'] == 30  # Descriptive only.
+    assert result['acceptance']['descriptive_quality_thresholds_pass'] is True
+    assert result['acceptance']['quality_thresholds_pass'] is False
+    assert result['acceptance']['all_primary_responses_within_deadline'] is False
+    assert result['acceptance']['full_set_pass'] is False
+
+
+@pytest.mark.parametrize('field', ['is_primary', 'attempt_number', 'retry_of'])
+def test_missing_primary_provenance_blocks_acceptance(field):
+    run, grades = complete_records()
+    del run['cases'][0][field]
+    result = summarize_records(run, grades)
+    assert result['primary_provenance']['all_primary_verified'] is False
+    assert result['acceptance']['full_set_pass'] is False
+
+
+@pytest.mark.parametrize('change', [
+    {'is_primary': 1}, {'attempt_number': True}, {'attempt_number': '1'},
+    {'attempt_number': 2}, {'primary_attempt': None}, {'primary_attempt': True},
+    {'is_primary': True, 'retry_of': {}},
+])
+def test_ambiguous_or_contradictory_primary_identity_is_rejected(change):
+    run, grades = complete_records()
+    run['cases'][0].update(change)
+    assert summarize_records(run, grades)['acceptance']['full_set_pass'] is False
+
+
+def test_conflicting_run_identity_blocks_otherwise_valid_primary_cases():
+    run, grades = complete_records()
+    run['attempt_identity'] = {'primary': False, 'attempt': 2, 'retry_of': {'path': 'original'}}
+    assert summarize_records(run, grades)['acceptance']['full_set_pass'] is False
+
+
+@pytest.mark.parametrize('status', ['BLOCKED', 'FAIL / INCOMPLETE',
+    'FAIL / PRESERVATION MISMATCH', 'RUNNING', 'Not run', None])
+def test_failed_blocked_or_unconfirmed_run_cannot_pass_despite_complete_scores(status):
+    run, grades = complete_records(1.0)
+    run['run_status'] = status
+    result = summarize_records(run, grades)
+    assert result['quality']['answer_correctness']['ratio'] == 1.0
+    assert result['latency']['pass'] is True
+    assert result['run_validity']['verified'] is False
+    assert result['acceptance']['full_set_pass'] is False
+
+
+@pytest.mark.parametrize('change', [
+    {'selected_cases_finished': False}, {'preexisting_workspaces_unchanged': False},
+    {'preexisting_workspaces_unchanged': None}, {'workspaces_after': None},
+    {'workspaces_after': {'workspace_count': 2, 'row_and_pdf_sha256': 'c' * 64}},
+    {'workspaces_before': {}, 'workspaces_after': {}},
+    {'configuration_verification': None},
+    {'configuration_verification': {'status': 'VERIFIED', 'approved_configuration_sha256': 'invalid'}},
+    {'preexisting_workspace_preservation_unconfirmed': True}, {'cleanup_unconfirmed_stop': True},
+    {'blocker': {'step': 'post-response pacing'}}, {'failure': {'step': 'cleanup'}},
+    {'chat_model': 'different-recorded-model'}, {'runtime_settings': {'retrieval_k': 99}},
+])
+def test_missing_or_failed_run_guards_block_combined_acceptance(change):
+    run, grades = complete_records(1.0)
+    run.update(change)
+    result = summarize_records(run, grades)
+    assert result['acceptance']['descriptive_quality_thresholds_pass'] is True
+    assert result['acceptance']['full_set_pass'] is False
+
+
+def test_explicit_valid_primary_and_run_control_can_pass():
+    run, grades = complete_records(1.0)
+    run['attempt_identity'] = {'primary': True, 'attempt': 1}
+    result = summarize_records(run, grades)
+    assert result['primary_provenance']['all_primary_verified'] is True
+    assert result['run_validity']['verified'] is True
+    assert result['acceptance']['full_set_pass'] is True

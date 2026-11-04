@@ -1,11 +1,105 @@
 # Local Supabase and Gemini verification
 
-Updated 4 November 2026 (Asia/Karachi). Curated review summary only.
+Updated 5 November 2026 (Asia/Karachi). Curated review summary only.
 Raw logs, screenshots, transcripts, exports, local workspace identifiers and
 secrets remain ignored. The earlier detailed checkpoint is preserved privately at
 logs/pr-review/local_setup_progress_before_pr_review.md.
 
 ## Status and limits
+
+### Reviewed fixes authorized for publication on PR #11, 5 November
+
+The owner's subsequent request authorizes committing/pushing the ten reviewed
+fix/test/audit/documentation files on the existing PR #11 branch, updating its
+description and checking exact-new-commit CI. No evaluation, merge, deployment
+or billing change is authorized. The earlier no-push instruction is superseded
+for this scoped publication only.
+
+Code-path re-review and **27 focused offline counterexample/control checks passed
+in 1.37s**: linked retry substitution is blocked; failed/BLOCKED/preservation-
+mismatched runs cannot pass combined acceptance; model/configuration mismatches
+stop the runner before auth/app/provider calls. Valid primary/run and configuration
+controls pass. This is review evidence separate from CI or release acceptance.
+Previous 137-check and 34-check relevant suites remain applicable to unchanged code.
+
+A **new prospective draft**, not a runnable/approved freeze, is being prepared at
+logs/evaluation/prospective-execution-freeze-2026-11-05/freeze-draft.json.
+It will pin the new publication SHA and actual local models/runtime settings and
+private-file fingerprints, with separately labelled proposed full-40 execution
+options (10s pre-submission pacing and opt-in diagnostics). All cases remain
+Not run. Execution approval remains absent; draft preparation authorizes no call.
+Historical freezes/protocols are not rewritten. The original strict latency FAIL,
+historical configuration UNVERIFIED and separate dated USER-REPORTED tolerance
+comparison (1/40 = 2.5%, no 100-case test) remain unchanged.
+
+Private publication/checkpoint records: logs/pr-review/publish-defect-fixes-2026-11-05/.
+Exact next action: audit staged content, publish the scoped commit, verify exact
+head CI, then finalize the new draft and private checkpoint. Queued/running CI is
+not PASS. Hosted acceptance and final client sign-off remain pending.
+
+### PR #11 review defects fixed locally; saved-record audit, 5 November
+
+Branch remains `review/local-evaluation-release`, base/published head
+622d300f71f48261b962405b580acb861f2f0f0b plus the new uncommitted fixes. No commit,
+push, service/provider request, evaluation, merge, deployment or billing change
+occurred in this task. Previous CI (234 passed, 7 skipped) belongs to 622d300;
+it is not CI evidence for this working tree.
+
+All three reviewed gaps are fixed locally:
+
+- Primary acceptance requires explicit `is_primary=True`, integer
+  `attempt_number=1` and present/null `retry_of`; contradictory identity and
+  duplicate case IDs are rejected or block acceptance. Linked retries remain
+  descriptive only. Missing legacy provenance is not inferred or filled in.
+- Combined acceptance requires successful completed-run status, finished cases,
+  matching valid before/after preservation witnesses and no failed/unconfirmed
+  checks, plus a digest-bound verified configuration snapshot. Quality and raw
+  latency metrics remain available even when combined acceptance is blocked.
+- The browser runner verifies effective models, all runtime settings, private
+  configuration fingerprints and explicit execution settings before any client,
+  browser or provider request. It rechecks before indexing and question submission.
+  Missing/mismatched/unsupported frozen fields stop execution; existing freezes
+  are never rewritten. App chunk/retrieval/SDK settings now share constants with
+  the validator; their values, prompt and answers are unchanged.
+
+New freezes must explicitly approve `execution_settings` (local URL, selected
+cases, pacing, capture/browser/timing flags and first-case gate). Legacy mixed
+`continuation_conditions` are blocked rather than silently migrated. Frozen
+model/runtime maps require every supported field with no unknown additions;
+every declared private-file fingerprint is checked. Captured verification stores
+only nonsecret settings and hashes. A new approved source/configuration freeze
+and separate authorization are prerequisites for any future run.
+
+Relevant final local checks: **137 passed in 17.05s** for scorer, configuration
+preflight and offline browser safeguards; **34 passed in 6.86s** for core/provider
+regressions. Mocked preflight failures made zero auth/app/provider calls and left
+their freeze files unchanged. The earlier 135-case pass preceded two additional
+configuration-record regressions and is superseded by the 137-case result.
+
+The separate [saved-record audit](evaluation_record_audit.md) applies corrected
+logic to 15 saved records without changing originals. All 708 sealed private
+evidence/review files remain byte-identical. Run 007's 40 explicit primary
+identities match immutable artifacts; descriptive quality still meets thresholds
+(30/30 correct, 36/36 citation pairs/coverage, 10/10 abstentions). Its original
+H03 11.880700000035766s violation and strict latency **FAIL** remain unchanged.
+Complete historical configuration provenance is **UNVERIFIED** under the new
+guard, not presumed mismatched. Earlier aggregate provenance is unverified where
+required fields are absent. Linked retries/diagnostics never substitute for
+primaries. No audited record is granted combined full-set acceptance.
+
+**Dated USER-REPORTED clarification (5 November, Asia/Karachi):** the owner reports
+the client accepts 2-3 responses per 100 exceeding 10 seconds. Latest observed
+exceedance is **1/40 = 2.5%**, a descriptive comparison with that reported range;
+no 100-case run was performed. Original strict FAIL and frozen D01-D08 protocol
+are preserved. Tolerance assessment is separate from run validity, formal
+prospective protocol/threshold selection and final client sign-off.
+
+Private new audit/checkpoints: logs/evaluation/audit-2026-11-05-defect-fixes/ and
+logs/pr-review/defect-fixes-2026-11-05/. The [PR review notes](release_review.md)
+record the local fixes. Next action: review the diff, tests, legacy unverified
+evidence and separate tolerance clarification. No push or new live run is
+authorized here. Hosted revision/dependencies, separate development acceptance,
+manual comparison/usage-cost, rollback and final client sign-off remain pending.
 
 ### Draft publication authorized, 4 November
 

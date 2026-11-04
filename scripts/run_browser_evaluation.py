@@ -23,6 +23,7 @@ from scripts.local_test_app import (LOCAL_API, LocalSetupBlocked, LocalTestApp,
                                     load_local_configuration, load_test_credentials)
 from src.knowledge_assistant.auth import AuthClient, AuthError
 from src.knowledge_assistant.persistence import WorkspaceStore
+from scripts.evaluation_configuration import ConfigurationMismatch, verify_configuration
 
 ROOT = Path(__file__).resolve().parents[1]
 RESPONSE_LIMIT_SECONDS = 10.0
@@ -202,6 +203,15 @@ def validate_run(run, root=ROOT):
             raise EvaluationBlocked('Run cases differ from the frozen candidate.')
         if case.get('status') != 'Not run':
             raise EvaluationBlocked('An existing primary result cannot be rerun or replaced.')
+
+
+def frozen_execution_settings(args, cases, config):
+    return {'supabase_url': config.get('SUPABASE_URL'),
+            'selected_case_ids': [case['id'] for case in cases],
+            'inter_case_delay_seconds': args.inter_case_delay_seconds,
+            'capture_provider_errors': args.capture_provider_errors,
+            'browser_diagnostics': args.browser_diagnostics, 'stage_timings': args.stage_timings,
+            'require_first_case_success': args.require_first_case_success}
 
 
 # This watcher lives in the browser throughout the actual request. Python polling
@@ -521,9 +531,14 @@ def main(argv=None):
             raise EvaluationBlocked('Local Gemini key/model configuration is incomplete.')
         credentials = load_test_credentials(ROOT, ('a',))
         sensitive = [config['GEMINI_API_KEY'], config['SUPABASE_PUBLISHABLE_KEY'], credentials['password_a']]
+        step = 'frozen runtime configuration verification'
+        execution = frozen_execution_settings(args, cases_to_run, config)
+        run['configuration_verification'] = verify_configuration(ROOT, freeze, config, execution)
+        verified_config = run['configuration_verification']['verified_configuration']
         from playwright.sync_api import expect, sync_playwright
-        run.update({'run_status': 'RUNNING', 'started_at': utc_now(), 'provider': 'gemini',
-                    'chat_model': config['GEMINI_CHAT_MODEL'], 'embedding_model': config['GEMINI_EMBEDDING_MODEL'],
+        run.update({'run_status': 'RUNNING', 'started_at': utc_now(),
+                    **verified_config['configured_models'],
+                    'runtime_settings': verified_config['runtime_settings'],
                     'browser_timing_method': TIMING_METHOD, 'latency_limit_seconds': RESPONSE_LIMIT_SECONDS,
                     'timing_scope': 'browser_submission_to_rendered_answer_and_sources',
                     'timing_clock': 'window.performance.now',
@@ -534,7 +549,8 @@ def main(argv=None):
                     'working_tree_status': subprocess.run(
                         ['git', 'status', '--short'], cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines(),
                     'tested_source_sha256': freeze['app_source_sha256'],
-                    'sdk_max_retries': 2, 'sdk_actual_retry_count': None,
+                    'sdk_max_retries': verified_config['runtime_settings']['sdk_max_retries'],
+                    'sdk_actual_retry_count': None,
                     'cpu_load_measurement': None,
                     'load_conditions': 'One sequential evaluation browser; existing user app untouched; no synthetic concurrent load.',
                     'selected_case_ids': [case['id'] for case in cases_to_run],
@@ -611,6 +627,8 @@ def main(argv=None):
                 page.evaluate(ARM_INDEXING, {'timeoutMs': WAIT_MILLISECONDS})
                 error_offset = telemetry_offset(error_file)
                 write_exclusive(case_dir / 'indexing-submission.json', {'at': utc_now(), 'files': list(target_files)}, sensitive)
+                verify_freeze(ROOT, freeze)
+                verify_configuration(ROOT, freeze, config, execution)
                 click('Index documents')
                 indexing = wait_browser('__evaluationIndex')
                 indexing['provider_errors'] = provider_events(error_file, error_offset)
@@ -632,6 +650,8 @@ def main(argv=None):
             question.fill(case['question'])
             step = case['id'] + ' inter-case pacing before submission'
             pacing = pace_before_submission(page, previous_completed, args.inter_case_delay_seconds)
+            verify_freeze(ROOT, freeze)
+            verify_configuration(ROOT, freeze, config, execution)
             attempt_name = 'primary.json' if identity['primary'] else 'retry-02.json'
             step = case['id'] + (' primary submission' if identity['primary'] else ' explicit retry submission')
             page.evaluate(ARM_RESPONSE, {'question': case['question'], 'timeoutMs': WAIT_MILLISECONDS})
@@ -721,9 +741,9 @@ def main(argv=None):
         complete = True
         run['run_status'] = 'COMPLETED_UNSCORED'
         run['selected_cases_finished'] = True
-    except (EvaluationBlocked, LocalSetupBlocked, AuthError) as error:
+    except (EvaluationBlocked, LocalSetupBlocked, AuthError, ConfigurationMismatch) as error:
         run['run_status'] = 'BLOCKED'
-        reason = str(error) if isinstance(error, EvaluationBlocked) else 'Local configuration or normal-user authentication unavailable.'
+        reason = str(error) if isinstance(error, (EvaluationBlocked, ConfigurationMismatch)) else 'Local configuration or normal-user authentication unavailable.'
         run['blocker'] = {'step': step, 'reason': reason, 'type': type(error).__name__, 'at': utc_now()}
         print('BLOCKED: ' + step + '; ' + reason, flush=True)
     except Exception as error:

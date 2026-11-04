@@ -2,6 +2,10 @@
 from dataclasses import dataclass, field
 import os
 
+SDK_MAX_RETRIES = 2
+CHAT_TIMEOUT_SECONDS = 45
+EMBEDDING_TIMEOUT_SECONDS = 45
+
 
 @dataclass(frozen=True)
 class ProviderConfig:
@@ -42,16 +46,16 @@ def configured_assistant(config=None):
         raise InputError(f'Configure the {config.label} API key, chat model and embedding model on the server.')
     endpoint = ('https://generativelanguage.googleapis.com/v1beta/openai/'
                 if config.provider == 'gemini' else 'https://api.openai.com/v1')
-    common = {'api_key': config.api_key, 'base_url': endpoint, 'max_retries': 2}
+    common = {'api_key': config.api_key, 'base_url': endpoint, 'max_retries': SDK_MAX_RETRIES}
     chat_options = {'temperature': 0} if config.provider == 'openai' else {}
-    model = ChatOpenAI(model=config.chat_model, timeout=45,
+    model = ChatOpenAI(model=config.chat_model, timeout=CHAT_TIMEOUT_SECONDS,
                        use_responses_api=False, **chat_options, **common)
     embedding_options = {}
     if config.provider == 'gemini':
         # Gemini expects strings, not OpenAI-specific token ID arrays.
         embedding_options = {'check_embedding_ctx_length': False, 'chunk_size': 20,
                              'model_kwargs': {'encoding_format': 'float'}}
-    embeddings = OpenAIEmbeddings(model=config.embedding_model, request_timeout=45,
+    embeddings = OpenAIEmbeddings(model=config.embedding_model, request_timeout=EMBEDDING_TIMEOUT_SECONDS,
                                   **embedding_options, **common)
     answer_model = model.with_structured_output(Answer, method='json_schema')
     from .provider_telemetry import ObservedChat, ObservedEmbeddings, local_capture

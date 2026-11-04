@@ -1,5 +1,78 @@
 # Local release review and PR draft
 
+## Scoped fix publication and re-review, 5 November 2026
+
+The latest owner instruction authorizes the ten reviewed fix/test/audit/docs
+files to be committed and pushed to PR #11's existing branch. This supersedes
+the local-only/no-push boundary of the historical follow-up below, without
+authorizing live evaluation, merge, deployment or billing changes.
+
+Re-review of the three original counterexamples: **resolved** by code-path review
+and 27 focused offline checks (27 passed in 1.37s). Explicit linked retries are
+excluded from primary acceptance; failed/BLOCKED/preservation-mismatched or
+unconfirmed runs cannot receive combined PASS; model/fingerprint/runtime/execution
+mismatches block before auth/app/provider calls. Positive controls still pass.
+Descriptive metrics remain available. CI is checked separately for the exact
+new pushed SHA; passing CI is not code-review or client approval.
+
+The private prospective draft path is
+logs/evaluation/prospective-execution-freeze-2026-11-05/freeze-draft.json.
+It pins the new commit and actual local settings, while proposed execution flags
+are explicitly labelled and approval remains absent. No new run is started.
+Historical strict FAIL and configuration UNVERIFIED remain, with the tolerance
+clarification separate. Full publication/draft validation and CI results belong
+to logs/pr-review/publish-defect-fixes-2026-11-05/; do not substitute old CI results.
+
+## Local follow-up to the three code-review findings, 5 November 2026
+
+PR #11 was published as draft at 622d300f71f48261b962405b580acb861f2f0f0b; its
+CI passed 234 tests with 7 skipped. The changes below are **local and uncommitted**
+on the same branch; that CI does not cover these fixes. No push, new live request,
+evaluation, merge, deployment or billing change is authorized by this follow-up.
+
+1. **Primary provenance:** `summarize_evaluation.py` now requires the explicit
+   primary identity fields, checks conflicting run identity and rejects duplicate
+   case IDs. Retry/missing/ambiguous records cannot pass primary acceptance.
+   Existing descriptive quality/latency metrics remain inspectable separately.
+2. **Combined acceptance:** failed/BLOCKED/unconfirmed/incomplete runs, absent or
+   mismatched preservation witnesses and unverified configuration cannot pass.
+   The three synthetic false-PASS counterexamples now fail closed; valid controls
+   still pass. Existing frozen results are not overwritten or reinterpreted as
+   newly executed cases.
+3. **Effective frozen configuration:** new `scripts/evaluation_configuration.py`
+   checks effective models, shared app runtime constants, every frozen private
+   configuration fingerprint and explicit `execution_settings`. The runner calls
+   this guard before clients/browser and rechecks before indexing/submission.
+   Verification records a digest-bound nonsecret snapshot; missing/unknown/
+   mismatched fields block, without updating the freeze or making requests.
+
+`core.py` and `providers.py` expose and use their existing numeric settings as
+shared constants; values, SYSTEM prompt, model selection and acceptance timer
+are unchanged. New `tests/test_evaluation_configuration.py` and expanded summary
+tests cover negative cases, valid controls and request-free preflight failure.
+Legacy mixed `continuation_conditions` cannot silently override or migrate into
+the new explicit execution-settings schema; any future execution needs a new
+separately approved source/configuration freeze. Original freezes remain intact.
+
+Final relevant offline checks: **137 passed in 17.05s** (summary/configuration/
+browser safeguards) and **34 passed in 6.86s** (core/provider regressions).
+No whole live suite or old paid evaluation was repeated.
+
+See [saved-record audit](evaluation_record_audit.md): 15 records audited separately,
+708 original private evidence/review files unchanged. Run 007 retains 40 verified
+primary artifacts and descriptive quality thresholds met, but original strict
+latency FAIL. Complete historical configuration remains UNVERIFIED; missing legacy
+aggregate provenance is also unverified. No audit produces a full-set PASS.
+
+The owner's **5 November 2026 USER-REPORTED** client tolerance is 2-3 exceedances
+per 100 responses. Observed 1/40 is 2.5%; no 100-case test occurred. This is a
+separate tolerance comparison, not an amendment of D01-D08, erasure of strict FAIL,
+proof of run validity or final client sign-off. Exact prospective ceiling/scope
+and the hosted/dependency/development/manual-cost/rollback acceptance work remain
+pending. Review this local diff; do not push or execute another run automatically.
+
+The rest of this document retains the earlier publication/preparation history.
+
 Publication authorization, 4 November 2026: the owner's subsequent request
 authorizes committing this reviewed change set on
 `review/local-evaluation-release`, pushing it and opening a **draft** PR to main.
