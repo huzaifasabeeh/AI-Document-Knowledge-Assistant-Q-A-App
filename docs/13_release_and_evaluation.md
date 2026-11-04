@@ -4,9 +4,26 @@
 
 The earlier manual-testing pause from 19 October 2026 was followed by completed
 local Supabase checks, a live Gemini smoke and a three-answer conversation
-persistence follow-up; see the
-[local checkpoint](local_setup_progress.md). Offline tests remain part of each
-change. Broader evaluation, deployment acceptance and client approval are pending.
+persistence follow-up; see the [local checkpoint](local_setup_progress.md).
+The first 40 primary outcomes were recorded across three distinct local segments:
+39 responses completed and H22 remains a quota failure. H27 took
+13.122499999976164 browser seconds, so mandatory latency and full-set acceptance
+failed. The later complete run 007 met all quality thresholds: 30/30 correct,
+36/36 supported citation pairs, 36/36 claims cited and 10/10 appropriate abstentions.
+Its H03 took 11.880700000035766 seconds, so mandatory every-response latency still
+failed (39/40 within 10.000s). See the [evaluation handover](evaluation_handover.md) for
+frozen evidence, exact remaining work and acceptance gates. Offline tests remain
+part of each change. Deployment acceptance and client approval remain pending.
+Subsequent separately linked H22/H27 retests completed in 2.0313/2.1696 browser
+seconds. They preserve the failed primaries and do not establish full-set latency
+PASS. H27's original per-stage breakdown remains unknown; no app bottleneck/fix
+was evidenced. Four subsequent bounded stage-instrumented diagnostics were fast;
+the slowdown was not reproduced and there is no proven bottleneck or performance
+fix. The [investigation is closed](latency_investigation_findings.md), with root
+cause unresolved. No diagnostic replaces a primary failure. Prepared future full
+drafts remain unexecuted; this review authorizes no more live requests. Use the
+[deployment acceptance checklist](deployment_acceptance_checklist.md) before any
+separately authorized release; this task changed no hosting or production settings.
 
 ## Use the right evaluation corpus
 
@@ -21,9 +38,11 @@ An offline test checks its evidence against actual PDFs. This verifies the test
 fixtures only. No complete nine-case live evaluation is recorded; the focused
 local smokes are reported separately and do not close the 40-question evaluation.
 
-## Deferred acceptance session
+## Separate development acceptance session
 
-After the selected provider is configured and live testing is authorized, use only the synthetic sample PDFs.
+The following checks use the nine development fixtures and sample PDFs. Their
+complete live acceptance session remains separate from the 40-question cohort.
+When that session is authorized and provider capacity is available, use only the synthetic sample PDFs.
 Reset between cases and upload exactly each case's `files` list. For each case,
 record commit, model, date, actual answer, cited pages, latency and pass/fail in
 a separate result log. Never overwrite expectations to match model output.
@@ -59,8 +78,13 @@ running commit. Account and provider settings are documented in guides 16–18.
    The deployed workspace schema is reported in guide 17, and its original SQL
    migrations are now recovered; see guide 20. Grant hardening is applied and verified;
    fresh-project replay remains pending.
-3. Complete offline gates, then the authorized synthetic-document live evaluation.
-   Record provider/model settings, failures, costs where available and acceptance.
+3. Complete offline gates, the separate development acceptance checks, and the
+   authorized 40-question acceptance. Preserve H22's primary quota failure,
+   H27's latency violation and run-007 H03's latency violation; also
+   distinguish continuations/retries/retests. Record provider/model settings,
+   failures, costs where available and acceptance. Every primary answer or
+   abstention must complete within 10.000 seconds of browser submission, including
+   rendered sources where applicable; p95 alone cannot satisfy that gate.
 4. Agree access, retention and spending limits before real client documents.
 5. For rollback, create a reviewed revert of the release changes on the hosting
    branch, deploy it and restart affected sessions. Preserve saved data. Code
@@ -71,10 +95,39 @@ running commit. Account and provider settings are documented in guides 16–18.
 
 The nine PDF cases are development fixtures. The separate 40-question held-out
 set required by guide 04 is prepared as a candidate in evaluation/heldout.
-Human ground-truth approval is pending. Freeze its documents and reviewed
-expected answers before testing; do not present the nine cases as that benchmark.
+Huzaifa Sabeeh confirmed the supplied AI-assisted review and D01-D08 protocol on
+31 October 2026; independent human review is not required by the owner and is
+not claimed. Approved originals, exact candidate bytes, application source and
+protocol are frozen privately. Original pending/null review metadata is preserved;
+subsequent owner confirmation is a separate record. Do not present the nine cases
+as that benchmark or change expectations to fit model output.
 Prepare results with counts/denominators, citation checks, latency, indexing time,
 provider usage/cost where available, pilot feedback and final reviewer acceptance.
+
+Historical segmented first-attempt totals were 29/30 correct supported answers, 35/35
+supported claim/page pairs, 35/35 factual claims cited and 10/10 appropriate
+abstentions. Quality thresholds were met; full-set latency failed: only 38 of
+39 completed responses were within 10.000 seconds, H27 exceeded it and H22
+produced no response. No cases remain unsubmitted and no retry was substituted
+into that cohort. Subsequent linked retries and the separate full run 007 are
+not part of those historical totals.
+The 2 November continuation used new opt-in error instrumentation and ten-second
+pre-submission pacing; it is not one uninterrupted run or high-load evidence.
+Preserve both failed primary outcomes; retries/retests cannot erase them.
+Manual timings, original internal retry counts and usage/cost remain unknown.
+Later diagnostics captured retry-count headers only for their own HTTP attempts.
+
+Latest complete local retest: all four quality gates met, mandatory per-response
+latency FAILED, full-set acceptance FAILED. Current stage-instrumented runtime
+has only bounded diagnostic results, not full acceptance. Hosted acceptance and
+final client sign-off remain pending. See the
+[release review and PR draft](release_review.md) for the pending diff, valid checks
+and exact remaining blockers. No further live run is authorized here.
+
+Hosted indexing/persistence successes and a requirements.txt installation that
+replaced pyarrow 26 with 24 are USER-REPORTED. The hosted commit and installed
+dependency inventory remain unverified. Reconcile both against the selected
+deployment candidate before claiming hosted acceptance.
 
 Week 2 RAG and Week 3 pilot remain In progress until live validation and review
 requirements are met. Documentation updates do not close those requirements.

@@ -4,10 +4,11 @@ Streamlit UI with Python, LangChain, session-scoped Chroma retrieval, PDF page
 citations, Supabase accounts and private saved PDFs/chat. OpenAI is the default;
 optional Gemini support is implemented. Local Supabase workflows, real Gemini
 answers, subsequent-turn autosave and source recovery after restored-PDF
-reindexing are verified. Broader answer-quality
-evaluation and hosted deployment acceptance remain pending.
+reindexing are verified locally. The latest local 40-case retest met quality
+thresholds, but mandatory every-response latency acceptance failed. Hosted
+acceptance and final client sign-off remain pending.
 
-## Current status — 30 October 2026
+## Current status — 4 November 2026
 
 PRs #5 (saved-document binding) and #6 (provider selection) are merged. Their
 automated checks passed. The owner reported signup/login/logout working; the
@@ -15,8 +16,18 @@ public login page was observed loading. The later local verification is recorded
 in the checkpoint below. Exact deployed revision and production acceptance have
 not been verified by those local checks.
 
+Latest local quality: 30/30 correct supported answers, 36/36 supported citation
+pairs, 36/36 claims cited and 10/10 appropriate abstentions. H03 took 11.8807s,
+so 39/40 responses met the mandatory <=10.000s browser deadline and full-set
+acceptance failed. Four later bounded diagnostics did not reproduce the slowdown;
+there is no proven bottleneck or performance fix. Original failures remain intact.
+
 - [Recovered database setup](docs/20_database_setup.md)
+- [Reproducible local setup](docs/local_setup_guide.md)
 - [Local setup and acceptance checkpoint](docs/local_setup_progress.md)
+- [Latency investigation findings](docs/latency_investigation_findings.md)
+- [Release review and PR draft](docs/release_review.md)
+- [Deployment acceptance checklist](docs/deployment_acceptance_checklist.md)
 - [40-question evaluation candidate](evaluation/heldout/README.md)
 - [Requirements review and remaining work](docs/19_requirements_review.md)
 - [User guide](docs/12_user_guide.md)

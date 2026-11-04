@@ -2,14 +2,20 @@
 
 ## Start locally on Windows
 
-From the repository folder, with the existing virtual environment installed:
+First configure Python 3.12, locked dependencies, local Supabase and private
+provider settings using the [local setup guide](local_setup_guide.md). Reuse
+existing accounts/configuration; never paste keys or passwords into chat.
+For the verified local Gemini/Supabase configuration, use the isolated launcher:
 
 ```powershell
-.\.venv\Scripts\python.exe -m streamlit run app.py
+.\.venv\Scripts\python.exe -m scripts.local_test_app
 ```
 
-Keep the terminal running and open the Local URL printed there. If Streamlit
-asks for an email during first launch, leave it empty and press Enter.
+Keep the terminal running and open its printed **Owned local app** URL. It uses
+a free loopback port and leaves other apps alone. Ctrl+C stops only that child.
+Ordinary launches with `python -m streamlit run app.py` read environment settings
+before Streamlit Secrets; use the controlled launcher for local verification.
+Starting the app alone does not submit an AI request.
 
 ## Sign in
 
@@ -54,13 +60,28 @@ not a guaranteed cleanup mechanism. Unsaved chat is temporary. Explicitly saved 
 
 - Invalid PDF: remove it and upload a valid text PDF, then preview again.
 - Missing API key: preview still works; configure the server key for AI use.
-- Unavailable credits: use preview until funded access is provided.
-- Authentication error: verify the server key privately, then retry.
-- Rate limit: wait and check account limits before retrying.
+- Unavailable credits or provider access: use preview; record the blocked AI
+  operation. Do not purchase access or change models as a troubleshooting step.
+- Authentication error: distinguish account login from provider access; check
+  the appropriate server settings privately, without printing keys/passwords.
+- Rate limit: stop new questions and inspect any saved operation/model/status,
+  quota metric and explicit retry guidance. Missing reset/window information is
+  unknown; repeated probes or an elapsed wait do not establish restored capacity.
+  See the [quota evidence guide](gemini_quota_check.md).
+- Slow response: indexing and response latency are separate. The local every-
+  response deadline failed; a later fast answer does not erase a slow one. See
+  [investigation findings](latency_investigation_findings.md); no fix is proven.
+- Restore shows chat but questions are disabled: re-index the restored PDFs with
+  provider consent. Restored answers/sources do not require new generation to view.
+- Chat-save warning: keep the session open, export a private backup and use
+  **Save chat now** after resolving the connection; do not assume autosave succeeded.
+- Wrong service or missing local configuration: use the setup helper and isolated
+  launcher. A `.env` file is not loaded; remote Supabase requires HTTPS.
 - Unsupported answer: rephrase or supply a relevant document; do not infer an
   answer from a missing-information response.
 
-Live answer quality and browser end-to-end acceptance remain unverified.
+Latest local quality thresholds were met; mandatory every-response <=10.000s
+browser acceptance failed. Hosted acceptance and final client sign-off are pending.
 
 ## Save, reopen and delete workspaces
 
@@ -78,4 +99,16 @@ Live answer quality and browser end-to-end acceptance remain unverified.
    entries cannot open and can be deleted once no other tab is saving them.
 
 See [storage limits and recovery](17_saved_workspaces.md). Two tabs updating one
-saved chat use last-write-wins. Full saved-workspace acceptance is still pending.
+saved chat use last-write-wins. Local save/restore, subsequent-turn autosave and
+restored-PDF follow-ups were verified. Repeat required release checks against the
+exact authorized hosted revision before claiming hosted acceptance.
+
+## Known limitations
+
+Only text PDFs are supported; there is no OCR. The short synthetic benchmark does
+not establish large-document, concurrent-load or real-client performance. Re-index
+after restore/restart before asking new questions; vectors are session-scoped.
+Unsaved chat is temporary and downloaded exports remain on the user's computer.
+Model access/quota and response time can vary. Local Edge Runtime, Logflare and
+Vector were excluded, not repaired or accepted. See the
+[release blockers](deployment_acceptance_checklist.md) for remaining acceptance.

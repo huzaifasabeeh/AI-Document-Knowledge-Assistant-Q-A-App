@@ -10,6 +10,7 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pydantic import BaseModel, Field
 from pypdf import PdfReader
+from .stage_timing import span
 
 
 class InputError(ValueError):
@@ -118,7 +119,8 @@ class Assistant:
         # Bounded preceding user questions help retrieve evidence for follow-ups.
         previous = [turn['content'][:2000] for turn in history[-6:] if turn['role'] == 'user'][-2:]
         query = '\n'.join(previous + [question])
-        docs = self.store.similarity_search(query, k=6, filter={'session_id': self.session_id})
+        with span('retrieval_including_query_embedding'):
+            docs = self.store.similarity_search(query, k=6, filter={'session_id': self.session_id})
         sources = {doc.metadata['chunk_id']: doc for doc in docs}
         if not sources:
             return Answer(status='not_found', claims=[]), {}

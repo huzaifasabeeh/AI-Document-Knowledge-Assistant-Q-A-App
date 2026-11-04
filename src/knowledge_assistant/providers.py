@@ -53,6 +53,17 @@ def configured_assistant(config=None):
                              'model_kwargs': {'encoding_format': 'float'}}
     embeddings = OpenAIEmbeddings(model=config.embedding_model, request_timeout=45,
                                   **embedding_options, **common)
-    engine = Assistant(embeddings, model.with_structured_output(Answer, method='json_schema'))
+    answer_model = model.with_structured_output(Answer, method='json_schema')
+    from .provider_telemetry import ObservedChat, ObservedEmbeddings, local_capture
+    from .stage_timing import local_timing_capture, attach_http_timing
+    capture = local_capture(config)
+    timing = local_timing_capture() if config.provider == 'gemini' else None
+    if timing is not None:
+        attach_http_timing(model.root_client)
+        attach_http_timing(embeddings.client._client)
+    if capture is not None or timing is not None:
+        embeddings = ObservedEmbeddings(embeddings, capture, config.embedding_model)
+        answer_model = ObservedChat(answer_model, capture, config.chat_model)
+    engine = Assistant(embeddings, answer_model)
     engine.provider_identity = config.identity
     return engine

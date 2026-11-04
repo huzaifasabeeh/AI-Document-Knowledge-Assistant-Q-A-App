@@ -4,6 +4,7 @@ import streamlit as st
 from src.knowledge_assistant.core import InputError, Upload, extract
 from src.knowledge_assistant.presentation import format_answer, provider_error, export_chat
 from src.knowledge_assistant.persistence_ui import saved_workspace_controls, persist_chat
+from src.knowledge_assistant.stage_timing import response_timing, span
 
 st.set_page_config(page_title='Document Knowledge Assistant', page_icon='📚', layout='wide')
 from src.knowledge_assistant.auth_ui import require_login, setting
@@ -169,14 +170,16 @@ for message in st.session_state.messages:
 question = st.chat_input('Ask about your indexed PDFs', disabled=not active or not consent or blocked)
 if question:
     try:
-        history = [{'role': m['role'], 'content': m['content']} for m in st.session_state.messages]
-        with st.spinner('Finding supporting passages…'):
-            answer, sources = st.session_state.assistant.ask(question, history)
-        content, evidence = format_answer(answer, sources)
-        st.session_state.messages.extend([
-            {'role': 'user', 'content': question},
-            {'role': 'assistant', 'content': content, 'sources': evidence}])
-        persist_chat()
+        with response_timing():
+            history = [{'role': m['role'], 'content': m['content']} for m in st.session_state.messages]
+            with st.spinner('Finding supporting passages…'):
+                answer, sources = st.session_state.assistant.ask(question, history)
+            with span('answer_formatting'):
+                content, evidence = format_answer(answer, sources)
+            st.session_state.messages.extend([
+                {'role': 'user', 'content': question},
+                {'role': 'assistant', 'content': content, 'sources': evidence}])
+            persist_chat()
         st.rerun()
     except InputError as exc:
         st.error(str(exc))
