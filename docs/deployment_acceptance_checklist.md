@@ -1,3 +1,5 @@
+> **Release update — 9 November 2026:** See [prospective acceptance v2 and deployment/rollback plan](prospective_release_acceptance_v2.md). This dated plan supersedes the prospective strict latency rule and outdated commit/CI-pending statements below, while preserving all historical failures and configuration uncertainty. Owner-reported tolerance is at most 3% slow responses (at most 1/40); it does not excuse failed requests or invalid evidence. PR commit cfd8e310 had successful CI. Hosting logs show main/app.py, Python 3.12.16 and requirements.txt, with final PyArrow 24.0.0; deployed SHA remains unverified. CI uses a different dependency input. V2 scorer implementation, new exact configuration freeze, hosted acceptance and rollback verification remain pending. No merge or deployment is authorized here.
+
 # Deployment acceptance checklist
 
 Reviewed 4 November 2026 (Asia/Karachi). **PENDING: this checklist authorizes no deployment.**
