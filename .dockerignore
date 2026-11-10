@@ -1,0 +1,11 @@
+**
+!Dockerfile
+!requirements-lock.txt
+!requirements.txt
+!app.py
+!src/
+!src/**
+!scripts/
+!scripts/preflight.py
+**/__pycache__/
+**/*.pyc
