@@ -1368,3 +1368,14 @@ Restored PDFs require re-indexing before a new question; saved chat stays visibl
 Subsequent-turn autosave and new questions after re-indexing are verified locally.
 The latest local quality scores do not establish latency or production acceptance.
 Hosted acceptance and final client sign-off remain pending.
+
+
+## 10 November 2026 - V2 policy implementation and deployment dependency alignment
+
+Implemented explicit canonical-digest-bound latency-v2 selection; absent policy retains legacy strict scoring. Runner requires matching run/freeze policy and owner confirmation before client creation. At most 1/40 exceeds 10 seconds; 2/40 fails. All scheduled responses must complete with valid timings; provenance/run/configuration guards remain. Strict metrics are still reported independently. No old record or private freeze was updated.
+
+Hosting requirements.txt now includes requirements-deployment-lock.txt. Deployment pins preserve the historical set except pyarrow 24.0.0 and certifi 2026.10.23. CI has independent historical-lock and hosting-entrypoint matrix legs. Historical requirements-lock.txt unchanged. Platform can still apply overrides; actual hosted inventory and SHA remain unverified.
+
+Actual isolated Python 3.12 deployment-input installation completed, pip check found no broken requirements, and the full offline suite passed: **310 passed, 7 skipped, 3 subtests passed (6.34s)**. Seven skipped checks are not claimed executed. Initial 67 pure summary/policy tests also passed outside the Streamlit conftest; the subsequent full installed-environment run supersedes that limited validation. No live provider requests, merge, deployment, billing changes or access to private Windows evidence occurred.
+
+Changes published to existing draft PR #11 via the GitHub connector; shell git push has no credentials here. Exact latest-head CI must be checked independently. Rebuild the private prospective freeze against new bytes before any separately authorized run. Hosted acceptance, rollback evidence and final client sign-off remain pending.
