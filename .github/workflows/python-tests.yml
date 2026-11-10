@@ -9,12 +9,16 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        dependency-file: [requirements-lock.txt, requirements.txt]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
           cache: pip
-      - run: python -m pip install -r requirements-lock.txt
+      - run: python -m pip install -r ${{ matrix.dependency-file }}
       - run: python -m pip check
       - run: python -m pytest -q
