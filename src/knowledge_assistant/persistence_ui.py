@@ -73,9 +73,13 @@ def saved_workspace_controls(uploads, active, blocked):
 
 
 def persist_chat():
+    from .stage_timing import span, persistence_skipped
     if st.session_state.get('saved_workspace_id'):
         try:
-            workspace_store().save_chat(st.session_state.saved_workspace_id, st.session_state.messages)
+            with span('workspace_persistence'):
+                workspace_store().save_chat(st.session_state.saved_workspace_id, st.session_state.messages)
             st.session_state.pop('chat_save_error', None)
         except PersistenceError as exc:
             st.session_state.chat_save_error = str(exc)
+    else:
+        persistence_skipped()

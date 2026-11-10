@@ -19,6 +19,8 @@ from urllib.request import ProxyHandler, build_opener
 from uuid import uuid4
 
 from src.knowledge_assistant.auth import AuthClient, AuthError, NoRedirect
+from src.knowledge_assistant.provider_telemetry import CAPTURE_ENV, validate_capture_path
+from src.knowledge_assistant.stage_timing import TIMING_ENV
 
 LOCAL_API = 'http://127.0.0.1:54321'
 WINDOWS = os.name == 'nt'
@@ -72,7 +74,8 @@ def child_environment(config, inherited=None):
     # privileged credentials and Streamlit overrides rather than forwarding them.
     prefixes = ('SUPABASE_', 'OPENAI_', 'GEMINI_', 'STREAMLIT_')
     result = {name: value for name, value in inherited.items()
-              if name.upper() != 'AI_PROVIDER' and not name.upper().startswith(prefixes)}
+              if name.upper() not in ('AI_PROVIDER', CAPTURE_ENV, TIMING_ENV)
+              and not name.upper().startswith(prefixes)}
     result.update({name: config.get(name, '') for name in SERVICE_SETTINGS})
     result['PYTHONUNBUFFERED'] = '1'
     return result
@@ -85,12 +88,29 @@ def _available_port():
 
 
 class LocalTestApp:
-    def __init__(self, root, output, config, port=None):
+    def __init__(self, root, output, config, port=None, provider_error_file=None,
+                 stage_timing_file=None):
         self.root, self.output = Path(root).resolve(), Path(output).resolve()
         allowed = self.root / 'logs/local-verification'
         if not self.output.is_relative_to(allowed) or self.output == allowed:
             raise ValueError('Child app output must be in its own ignored local verification folder.')
         self.environment = child_environment(config)
+        self.provider_error_file = None
+        if provider_error_file is not None:
+            self.provider_error_file = validate_capture_path(
+                self.root, provider_error_file, owned_output=self.output)
+            if self.provider_error_file.exists():
+                raise FileExistsError('Existing provider evidence is preserved; choose a new sink.')
+            self.environment[CAPTURE_ENV] = str(self.provider_error_file)
+        self.stage_timing_file = None
+        if stage_timing_file is not None:
+            self.stage_timing_file = validate_capture_path(self.root, stage_timing_file,
+                                                          owned_output=self.output)
+            if self.stage_timing_file.exists():
+                raise FileExistsError('Existing timing evidence is preserved; choose a new sink.')
+            if self.stage_timing_file == self.provider_error_file:
+                raise ValueError('Stage timings and provider errors require separate sinks.')
+            self.environment[TIMING_ENV] = str(self.stage_timing_file)
         if port is not None and (type(port) is not int or not 1024 <= port <= 65535):
             raise ValueError('Choose an unprivileged local port between 1024 and 65535.')
         self.port = port
@@ -112,6 +132,14 @@ class LocalTestApp:
             stream.write('# Controlled local test app: settings arrive through its environment.\n')
         self._log = (self.output / 'child-streamlit.log').open('xb')
         try:
+            if self.provider_error_file is not None:
+                self.provider_error_file.parent.mkdir(parents=True, exist_ok=True)
+                with self.provider_error_file.open('x', encoding='utf-8'):
+                    pass
+            if self.stage_timing_file is not None:
+                self.stage_timing_file.parent.mkdir(parents=True, exist_ok=True)
+                with self.stage_timing_file.open('x', encoding='utf-8'):
+                    pass
             port, route = self.port or _available_port(), 'local-check-' + uuid4().hex
             self.url = f'http://127.0.0.1:{port}/{route}'
             command = [sys.executable, '-m', 'streamlit', 'run', str(self.root / 'app.py'),

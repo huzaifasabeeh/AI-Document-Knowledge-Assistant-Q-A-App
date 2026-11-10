@@ -5,6 +5,29 @@ import os
 from pathlib import Path
 import sys
 
+from packaging.requirements import Requirement
+
+
+def pinned_requirements(path, ancestors=()):
+    """Read trusted checked-in includes, rejecting cycles and unpinned entries."""
+    path = Path(path).resolve()
+    if path in ancestors:
+        raise ValueError('Cyclic requirements include.')
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        if line.startswith('-r '):
+            yield from pinned_requirements(path.parent / line[3:].strip(), (*ancestors, path))
+            continue
+        requirement = Requirement(line)
+        if requirement.marker and not requirement.marker.evaluate():
+            continue
+        pins = list(requirement.specifier)
+        if len(pins) != 1 or pins[0].operator != '==' or '*' in pins[0].version:
+            raise ValueError('Startup checks require exact dependency pins.')
+        yield requirement.name, pins[0].version
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -15,11 +38,7 @@ def main():
     problems = []
     print('Local prerequisite check — no network requests or API charges.')
     print(f'Python: {sys.version.split()[0]}')
-    for line in (root / 'requirements.txt').read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith('#'):
-            continue
-        name, expected = line.split('==', 1)
+    for name, expected in pinned_requirements(root / 'requirements.txt'):
         try:
             installed = version(name)
         except PackageNotFoundError:

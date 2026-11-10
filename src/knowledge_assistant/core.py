@@ -10,6 +10,11 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pydantic import BaseModel, Field
 from pypdf import PdfReader
+from .stage_timing import span
+
+CHUNK_SIZE = 1000
+CHUNK_OVERLAP = 150
+RETRIEVAL_K = 6
 
 
 class InputError(ValueError):
@@ -59,7 +64,7 @@ def extract(uploads: list[Upload], session_id: str) -> list[Document]:
 
 
 def chunk(pages: list[Document]) -> list[Document]:
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
     chunks = splitter.split_documents(pages)
     if len(chunks) > 5000:
         raise InputError('Too much extracted text; use smaller PDFs.')
@@ -118,7 +123,8 @@ class Assistant:
         # Bounded preceding user questions help retrieve evidence for follow-ups.
         previous = [turn['content'][:2000] for turn in history[-6:] if turn['role'] == 'user'][-2:]
         query = '\n'.join(previous + [question])
-        docs = self.store.similarity_search(query, k=6, filter={'session_id': self.session_id})
+        with span('retrieval_including_query_embedding'):
+            docs = self.store.similarity_search(query, k=RETRIEVAL_K, filter={'session_id': self.session_id})
         sources = {doc.metadata['chunk_id']: doc for doc in docs}
         if not sources:
             return Answer(status='not_found', claims=[]), {}

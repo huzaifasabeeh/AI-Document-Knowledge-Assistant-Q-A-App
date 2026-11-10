@@ -24,6 +24,8 @@ data/uploads/
 chroma_db/
 indexes/
 logs/
+# Owner-supplied evaluation review originals are private evidence.
+/evaluation/approved-review/
 document-chat*.txt
 
 # Generated inspection output

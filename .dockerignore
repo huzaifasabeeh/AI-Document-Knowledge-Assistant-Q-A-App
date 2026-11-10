@@ -1,6 +1,6 @@
 **
 !Dockerfile
-!requirements-lock.txt
+!requirements-deployment-lock.txt
 !requirements.txt
 !app.py
 !src/

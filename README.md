@@ -1,50 +1,14 @@
-# Prototype progress
-
-The preview demo is deployed on [Streamlit Community Cloud](https://ai-document-knowledge-assistant-q-a-app-f6ozauylzvgbsqda24mnfs.streamlit.app/).
-Hosted startup was observed on 21 October; the owner subsequently reported
-successful use without a visible error. This is not final AI acceptance.
-See [hosted verification and remaining work](docs/15_hosted_status.md).
-
-Prepare a separate final evaluation worksheet without API calls:
-
-```sh
-python -m scripts.prepare_development_evaluation --output evaluation/review_candidate.json
-```
-
-The command preserves the nine PDF cases and their expected evidence, records
-the candidate commit, leaves every result unrun, and refuses to overwrite an
-existing review. Record results only after live testing is authorized.
-
-Deployment preparation now includes a no-network prerequisite check, a local
-launcher (`python scripts/start.py`) and optional Docker packaging. See the
-[private deployment and handoff guide](docs/14_deployment_handoff.md).
-The container has not been built or deployed. Detailed final acceptance and live AI testing
-remain pending; no release completion
-is claimed. The existing Streamlit UI remains the selected frontend.
-
-Week 3 frontend work has started: document sidebar, local page preview without API calls, status metrics, source excerpts and readable provider errors. See [frontend checkpoint and run guide](docs/11_frontend_checkpoint.md). Live AI validation and pilot evaluation remain pending.
-
-Previous maintenance checkpoint: repeat-safe cleanup, binary PDF checkout protection and
-strict sample-PDF regression checks are implemented. The offline suite now has
-26 passing tests on Linux. Windows previously passed the original 18 tests;
-the new Windows rerun is pending. Live validation is blocked by unavailable API
-credits. See [results and Windows next steps](docs/10_week2_live_test_results.md).
-
-The repository now includes a Python/Streamlit document Q&A prototype with PDF extraction, per-page chunking, session-scoped Chroma retrieval and an OpenAI structured-answer integration. See [setup and workflow](docs/08_week2_workflow.md) and [test log](docs/09_week2_test_log.md). The extraction pipeline is locally validated; live OpenAI answer quality remains unverified. API credentials are required to index documents and generate answers.
-
-Run `pip install -r requirements-lock.txt`, configure `OPENAI_API_KEY` in your environment, then run `streamlit run app.py`. Run offline checks with `python -m pytest -q`.
-
-GitHub-to-Notion task statuses are maintained in `project/tasks.json`. Automatic sync still requires the separate `NOTION_TOKEN` repository secret and tracker access; see [sync setup](docs/07_notion_sync_setup.md). Completion of a push is not evidence that either provider integration succeeded.
 # AI Document Knowledge Assistant & Q&A App
 
 Streamlit UI with Python, LangChain, session-scoped Chroma retrieval, PDF page
 citations, Supabase accounts and private saved PDFs/chat. OpenAI is the default;
 optional Gemini support is implemented. Local Supabase workflows, real Gemini
 answers, subsequent-turn autosave and source recovery after restored-PDF
-reindexing are verified. Broader answer-quality
-evaluation and hosted deployment acceptance remain pending.
+reindexing are verified locally. The latest local 40-case retest met quality
+thresholds, but mandatory every-response latency acceptance failed. Hosted
+acceptance and final client sign-off remain pending.
 
-## Current status — 30 October 2026
+## Current status — 4 November 2026
 
 PRs #5 (saved-document binding) and #6 (provider selection) are merged. Their
 automated checks passed. The owner reported signup/login/logout working; the
@@ -52,8 +16,18 @@ public login page was observed loading. The later local verification is recorded
 in the checkpoint below. Exact deployed revision and production acceptance have
 not been verified by those local checks.
 
+Latest local quality: 30/30 correct supported answers, 36/36 supported citation
+pairs, 36/36 claims cited and 10/10 appropriate abstentions. H03 took 11.8807s,
+so 39/40 responses met the mandatory <=10.000s browser deadline and full-set
+acceptance failed. Four later bounded diagnostics did not reproduce the slowdown;
+there is no proven bottleneck or performance fix. Original failures remain intact.
+
 - [Recovered database setup](docs/20_database_setup.md)
+- [Reproducible local setup](docs/local_setup_guide.md)
 - [Local setup and acceptance checkpoint](docs/local_setup_progress.md)
+- [Latency investigation findings](docs/latency_investigation_findings.md)
+- [Release review and PR draft](docs/release_review.md)
+- [Deployment acceptance checklist](docs/deployment_acceptance_checklist.md)
 - [40-question evaluation candidate](evaluation/heldout/README.md)
 - [Requirements review and remaining work](docs/19_requirements_review.md)
 - [User guide](docs/12_user_guide.md)
@@ -179,3 +153,46 @@ Official references and access dates are included in the report and baseline aud
 - [PDF-specific evaluation cases](evaluation/pdf_questions.json): expected
   answers and physical page evidence for the PDF corpus. The original text
   baseline questions remain a separate benchmark.
+
+
+## Archived deployment preparation (October 2026)
+
+The following notes predate authentication, persistence and the current release work. Use the current status above for release decisions.
+
+# Prototype progress
+
+The preview demo is deployed on [Streamlit Community Cloud](https://ai-document-knowledge-assistant-q-a-app-f6ozauylzvgbsqda24mnfs.streamlit.app/).
+Hosted startup was observed on 21 October; the owner subsequently reported
+successful use without a visible error. This is not final AI acceptance.
+See [hosted verification and remaining work](docs/15_hosted_status.md).
+
+Prepare a separate final evaluation worksheet without API calls:
+
+```sh
+python -m scripts.prepare_development_evaluation --output evaluation/review_candidate.json
+```
+
+The command preserves the nine PDF cases and their expected evidence, records
+the candidate commit, leaves every result unrun, and refuses to overwrite an
+existing review. Record results only after live testing is authorized.
+
+Deployment preparation now includes a no-network prerequisite check, a local
+launcher (`python scripts/start.py`) and optional Docker packaging. See the
+[private deployment and handoff guide](docs/14_deployment_handoff.md).
+The container has not been built or deployed. Detailed final acceptance and live AI testing
+remain pending; no release completion
+is claimed. The existing Streamlit UI remains the selected frontend.
+
+Week 3 frontend work has started: document sidebar, local page preview without API calls, status metrics, source excerpts and readable provider errors. See [frontend checkpoint and run guide](docs/11_frontend_checkpoint.md). Live AI validation and pilot evaluation remain pending.
+
+Previous maintenance checkpoint: repeat-safe cleanup, binary PDF checkout protection and
+strict sample-PDF regression checks are implemented. The offline suite now has
+26 passing tests on Linux. Windows previously passed the original 18 tests;
+the new Windows rerun is pending. Live validation is blocked by unavailable API
+credits. See [results and Windows next steps](docs/10_week2_live_test_results.md).
+
+The repository now includes a Python/Streamlit document Q&A prototype with PDF extraction, per-page chunking, session-scoped Chroma retrieval and an OpenAI structured-answer integration. See [setup and workflow](docs/08_week2_workflow.md) and [test log](docs/09_week2_test_log.md). The extraction pipeline is locally validated; live OpenAI answer quality remains unverified. API credentials are required to index documents and generate answers.
+
+Run `pip install -r requirements-lock.txt`, configure `OPENAI_API_KEY` in your environment, then run `streamlit run app.py`. Run offline checks with `python -m pytest -q`.
+
+GitHub-to-Notion task statuses are maintained in `project/tasks.json`. Automatic sync still requires the separate `NOTION_TOKEN` repository secret and tracker access; see [sync setup](docs/07_notion_sync_setup.md). Completion of a push is not evidence that either provider integration succeeded.
