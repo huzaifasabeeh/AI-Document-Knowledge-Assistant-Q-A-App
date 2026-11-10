@@ -262,3 +262,40 @@ def test_explicit_valid_primary_and_run_control_can_pass():
     assert result['primary_provenance']['all_primary_verified'] is True
     assert result['run_validity']['verified'] is True
     assert result['acceptance']['full_set_pass'] is True
+
+
+def v2_records():
+    from copy import deepcopy
+    from scripts.evaluation_latency_policy import V2_POLICY, policy_digest
+    run, grades = complete_records(2.0)
+    run['acceptance_policy'] = {'policy': deepcopy(V2_POLICY),
+        'sha256': policy_digest(V2_POLICY), 'owner_confirmation': 'Owner approved prospective policy'}
+    run['cases'][0]['answer_seconds'] = 11.8807
+    return run, grades
+
+
+def test_v2_preserves_strict_failure_and_accepts_one_slow_primary():
+    run, grades = v2_records()
+    result = summarize_records(run, grades)
+    assert result['latency']['pass'] is False
+    assert result['acceptance']['all_primary_responses_within_deadline'] is False
+    assert result['prospective_latency']['pass'] is True
+    assert result['acceptance']['full_set_pass'] is True
+    run['cases'][1]['answer_seconds'] = 10.00001
+    assert summarize_records(run, grades)['acceptance']['full_set_pass'] is False
+
+
+@pytest.mark.parametrize('change', ['retry', 'blocked', 'configuration', 'failure', 'missing_timing'])
+def test_v2_tolerance_cannot_bypass_existing_acceptance_guards(change):
+    run, grades = v2_records()
+    if change == 'retry':
+        run['cases'][1].update(is_primary=False, attempt_number=2, retry_of={'path':'prior'})
+    elif change == 'blocked':
+        run['run_status'] = 'BLOCKED'
+    elif change == 'configuration':
+        run['configuration_verification'] = None
+    elif change == 'failure':
+        run['cases'][1]['status'] = 'TECHNICAL_ERROR'
+    else:
+        run['cases'][1]['answer_seconds'] = None
+    assert summarize_records(run, grades)['acceptance']['full_set_pass'] is False
