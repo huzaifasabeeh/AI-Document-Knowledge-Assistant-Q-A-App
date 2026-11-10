@@ -1,4 +1,4 @@
-"""Create a blank evaluation record without running models or overwriting results."""
+"""Create a blank held-out evaluation record without running models or overwriting results."""
 import argparse
 import hashlib
 import json
