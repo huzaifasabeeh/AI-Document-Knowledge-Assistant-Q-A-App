@@ -6,6 +6,8 @@ import math
 from pathlib import Path
 import statistics
 
+from scripts.evaluation_latency_policy import prospective_latency
+
 
 CASE_IDS = tuple(f'H{number:02d}' for number in range(1, 41))
 ANSWERABLE_IDS = CASE_IDS[:30]
@@ -209,6 +211,11 @@ def summarize_records(run, grading=None):
         'note': 'Every primary response must complete within 10.000 seconds; median/p95/max are descriptive.',
     }
 
+    prospective = prospective_latency(
+        run, completed_count=len(completed), timed_count=len(timed),
+        exceeded_count=len(exceeded), scope_verified=scope_verified, expected_count=len(CASE_IDS))
+    policy_latency_pass = prospective['pass'] if prospective is not None else latency_pass
+
     def recorded_total(field):
         measured = [case[field] for case in cases.values() if _number(case.get(field))]
         return {'recorded_case_count': len(measured),
@@ -240,6 +247,7 @@ def summarize_records(run, grading=None):
             'excluded_noncompleted_grade_ids': sorted(grades.keys() - completed),
         },
         'quality': quality, 'latency': latency,
+        'prospective_latency': prospective,
         'primary_provenance': provenance, 'run_validity': validity,
         'usage_and_cost': {field: recorded_total(field) for field in (
             'input_tokens', 'output_tokens', 'embedding_tokens', 'cost')},
@@ -254,7 +262,9 @@ def summarize_records(run, grading=None):
             'descriptive_quality_thresholds_pass': quality_pass,
             'quality_thresholds_pass': quality_pass and provenance['all_primary_verified'],
             'all_primary_responses_within_deadline': latency_pass and provenance['all_primary_verified'],
-            'full_set_pass': (quality_pass and latency_pass and provenance['all_primary_verified']
+            'latency_policy_pass': policy_latency_pass and provenance['all_primary_verified'],
+            'policy_version': 'latency-v2' if prospective is not None else 'legacy-strict',
+            'full_set_pass': (quality_pass and policy_latency_pass and provenance['all_primary_verified']
                               and validity['verified']),
             'deployment_acceptance': 'Not established by this local evaluation',
         },
