@@ -6,7 +6,7 @@ Update, 23 October 2026: Streamlit hosting and startup are confirmed for the
 preview demo; owner reports successful use without visible errors. Detailed
 acceptance and paid AI evaluation remain pending. See document 15.
 Generate the nine-case review worksheet with
-`python -m scripts.prepare_evaluation --output evaluation/review_candidate.json`.
+`python -m scripts.prepare_development_evaluation --output evaluation/review_candidate.json`.
 No provider is contacted; blank results are not passes.
 
 Earlier checkpoint:
