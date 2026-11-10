@@ -54,3 +54,13 @@ Proposed remediation: validate a dedicated Linux/Python-3.12 deployment lock tha
 PR #11 remains draft and unmerged. Prior exact-head CI for cfd8e310 was successful; any new documentation commit has a new head and its own CI state. Runtime/scoring changes, a new live run, merge, deployment, billing changes and private Windows configuration are not performed by this plan.
 
 Historical source evidence and private records are preserved. This plan supersedes current-action statements in older checklists only where explicitly described above; historical observations remain valid as dated evidence.
+
+## Implementation checkpoint - 10 November 2026
+
+V2 policy is now implemented explicitly in scripts/evaluation_latency_policy.py. A run without acceptance_policy retains legacy strict scoring. For a prospective run, both freeze.json and run.json must carry identical acceptance_policy objects containing policy, its canonical SHA-256 and a nonempty owner_confirmation. The runner rejects missing/mismatched/unknown v2 policy metadata before any client creation. Do not retrofit this metadata to historical runs. Rebuild and review a new freeze against these changed source bytes.
+
+The policy object is exactly: {"version":"latency-v2","deadline_seconds":10,"maximum_exceedance_percent":3,"require_all_scheduled_responses":true}. Use policy_digest(V2_POLICY) to calculate the binding digest, not a hand-copied value. Strict latency metrics remain separate; prospective_latency and acceptance.policy_version expose the selected gate. Run validity, preservation, configuration and primary-provenance requirements are unchanged. No live run or private freeze was modified here.
+
+Hosting requirements.txt now includes requirements-deployment-lock.txt; the deployment leg of CI installs that exact hosting entrypoint. The historical requirements-lock.txt remains unchanged and has its own CI matrix leg. The deployment lock preserves the original full pinned set (including development tools for now), changing only PyArrow to 24.0.0 and certifi to the platform-observed 2026.10.23. This avoids an unvalidated hand-pruned dependency closure. Future pruning is separate work. Hosting can still apply platform overrides; capture the actual installed inventory after authorized deployment.
+
+Local focused validation: 67 tests plus 3 unittest subtests passed in an isolated pytest environment. These pure scoring/policy tests were copied unchanged outside the repository conftest because this workspace lacks Streamlit; no runtime integration tests were claimed. Python compile and whitespace checks passed. Full clean-install, pip check and application tests are delegated to the exact-head CI matrix; results must be checked before merging.
