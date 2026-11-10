@@ -8,7 +8,7 @@ See [hosted verification and remaining work](docs/15_hosted_status.md).
 Prepare a separate final evaluation worksheet without API calls:
 
 ```sh
-python -m scripts.prepare_evaluation --output evaluation/review_candidate.json
+python -m scripts.prepare_development_evaluation --output evaluation/review_candidate.json
 ```
 
 The command preserves the nine PDF cases and their expected evidence, records
