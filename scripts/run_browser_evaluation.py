@@ -24,6 +24,7 @@ from scripts.local_test_app import (LOCAL_API, LocalSetupBlocked, LocalTestApp,
 from src.knowledge_assistant.auth import AuthClient, AuthError
 from src.knowledge_assistant.persistence import WorkspaceStore
 from scripts.evaluation_configuration import ConfigurationMismatch, verify_configuration
+from scripts.evaluation_latency_policy import verify_policy_binding
 
 ROOT = Path(__file__).resolve().parents[1]
 RESPONSE_LIMIT_SECONDS = 10.0
@@ -521,6 +522,15 @@ def main(argv=None):
 
     try:
         verify_freeze(ROOT, freeze)
+        # Policy selection must be approved before submission, never retrofitted
+        # onto a completed historical record by the runner.
+        if run.get('acceptance_policy') != freeze.get('acceptance_policy'):
+            raise EvaluationBlocked('Run/freeze acceptance policies differ.')
+        if freeze.get('acceptance_policy') is not None:
+            try:
+                verify_policy_binding(freeze['acceptance_policy'])
+            except ValueError as error:
+                raise EvaluationBlocked(str(error)) from None
         validate_run(run)
         cases_to_run = selected_cases(run, args.case_ids)
         identity = attempt_identity(ROOT, cases_to_run, args.retry_of)
