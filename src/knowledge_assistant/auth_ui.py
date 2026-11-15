@@ -1,7 +1,8 @@
 """Fail-closed account gate. No document/chat persistence is added here."""
 import os
 import streamlit as st
-from .auth import AuthClient, AuthError, clear_session, validate_credentials
+from .auth import (AuthClient, AuthError, RECOVERY_SENT, clear_session, validate_credentials,
+                   validate_email, validate_recovery)
 
 
 def setting(name):
@@ -12,6 +13,34 @@ def setting(name):
         return str(st.secrets.get(name, '')).strip()
     except (FileNotFoundError, st.errors.StreamlitSecretNotFoundError):
         return ''
+
+
+def password_recovery(client):
+    """Email-code password reset. Never signs the user in or keeps a recovery token."""
+    with st.expander('Forgot your password?'):
+        st.caption('We will email a one-time code. Enter it below with a new password.')
+        with st.form('recovery_request_form', clear_on_submit=True):
+            email = st.text_input('Email', key='recovery_email')
+            send = st.form_submit_button('Send reset code')
+        if send:
+            try:
+                client.request_recovery(validate_email(email))
+                st.success(RECOVERY_SENT)  # Same message whether or not the account exists.
+            except AuthError as exc:
+                st.error(str(exc))
+        with st.form('recovery_reset_form', clear_on_submit=True):
+            email = st.text_input('Email', key='reset_email')
+            code = st.text_input('Code from email', key='reset_code')
+            password = st.text_input('New password', type='password', key='reset_password')
+            confirmation = st.text_input('Confirm new password', type='password', key='reset_confirm')
+            reset = st.form_submit_button('Set new password')
+        if reset:
+            try:
+                email, code = validate_recovery(email, code, password, confirmation)
+                client.reset_password(email, code, password)
+                st.success('Password updated. Use Log in with your new password.')
+            except AuthError as exc:
+                st.error(str(exc))
 
 
 def require_login():
@@ -76,6 +105,7 @@ def require_login():
                 st.rerun()
             except AuthError as exc:
                 st.error(str(exc))
+        password_recovery(client)
     with signup:
         with st.form('signup_form', clear_on_submit=True):
             email = st.text_input('Email', key='signup_email')

@@ -16,6 +16,10 @@ class NoRedirect(HTTPRedirectHandler):
 
 
 LOOPBACK_HOSTS = {'127.0.0.1', '::1', 'localhost'}
+DENIED_MESSAGE = 'Authentication failed. Check your details and confirm your email, then retry.'
+RECOVERY_SENT = ('If an account exists for that email, a reset code has been sent. '
+                 'Enter it below with a new password.')
+EMAIL_PATTERN = r'[^\s@]+@[^\s@]+\.[^\s@]+'
 
 
 def supabase_opener(url):
@@ -58,13 +62,13 @@ class AuthClient:
                 raise AuthError('Authentication requires a publishable or anon key.') from None
         self.url, self.key = url.rstrip('/'), key
 
-    def request(self, path, data=None, token=None):
+    def request(self, path, data=None, token=None, method=None, denied=None):
         headers = {'apikey': self.key, 'Content-Type': 'application/json'}
         if token:
             headers['Authorization'] = 'Bearer ' + token
         req = Request(self.url + '/auth/v1/' + path, headers=headers,
                       data=json.dumps(data).encode() if data is not None else None,
-                      method='POST' if data is not None else 'GET')
+                      method=method or ('POST' if data is not None else 'GET'))
         try:
             with supabase_opener(self.url).open(req, timeout=15) as response:
                 raw = response.read()
@@ -76,7 +80,7 @@ class AuthClient:
             if exc.code == 429:
                 message = 'Too many attempts. Please wait and try again.'
             elif exc.code in (400, 401, 403, 422):
-                message = 'Authentication failed. Check your details and confirm your email, then retry.'
+                message = denied or DENIED_MESSAGE
             else:
                 message = 'Authentication service unavailable. Please try again later.'
             raise AuthError(message) from None
@@ -102,10 +106,39 @@ class AuthClient:
     def logout(self, token):
         self.request('logout?scope=local', {}, token)
 
+    def request_recovery(self, email):
+        """Ask Supabase to email a one-time recovery code. Reveals nothing about the account."""
+        self.request('recover', {'email': email})
+
+    def reset_password(self, email, code, password):
+        """Verify the emailed code, set a new password, then discard the recovery session."""
+        result = self.request(
+            'verify', {'type': 'recovery', 'email': email, 'token': code},
+            denied='That code is invalid or has expired. Request a new code and try again.')
+        token = result.get('access_token')
+        if not isinstance(token, str) or not token:
+            raise AuthError('Password reset did not complete. Please try again.')
+        try:
+            self.request('user', {'password': password}, token=token, method='PUT',
+                         denied='The new password was not accepted. Choose a different password.')
+        finally:
+            # The recovery session is never kept; sign-in must use the new password.
+            try:
+                self.logout(token)
+            except AuthError:
+                pass
+
+
+def validate_email(email):
+    email = (email or '').strip()
+    if not re.fullmatch(EMAIL_PATTERN, email):
+        raise AuthError('Enter a valid email address.')
+    return email
+
 
 def validate_credentials(email, password, confirmation=None):
     email = email.strip()
-    if not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email) or not password:
+    if not re.fullmatch(EMAIL_PATTERN, email) or not password:
         raise AuthError('Enter a valid email address and password.')
     if confirmation is not None:
         if len(password) < 8:
@@ -113,6 +146,15 @@ def validate_credentials(email, password, confirmation=None):
         if password != confirmation:
             raise AuthError('Passwords do not match.')
     return email
+
+
+def validate_recovery(email, code, password, confirmation):
+    """Check reset-form values locally before any provider request."""
+    email = validate_credentials(email, password, confirmation)
+    code = re.sub(r'\s+', '', code or '')
+    if not re.fullmatch(r'\d{6,10}', code):
+        raise AuthError('Enter the numeric code from the email.')
+    return email, code
 
 
 def clear_session(state):
