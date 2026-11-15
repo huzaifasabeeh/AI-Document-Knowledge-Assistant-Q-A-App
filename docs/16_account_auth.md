@@ -27,6 +27,21 @@ require the deployed database/storage schema; see the storage guide.
    email/password. This app does not consume URL token fragments or auto-login from
    confirmation callbacks. Existing accounts receive neutral signup instructions.
 
+## Forgot password
+
+The Log in tab has a "Forgot your password?" section. The user enters their email and
+receives a one-time code, then enters email, code and a new password (at least 8
+characters, entered twice). The app calls Supabase Auth `recover`, `verify`
+(type `recovery`) and `user` (PUT). The recovery session is signed out immediately and
+never stored, so the user must then log in with the new password. The "code sent"
+message is the same whether or not the account exists.
+
+Required Supabase setting (the app cannot do this itself): edit the "Reset Password"
+email template so it contains `{{ .Token }}`. The default template contains only a
+link, which this app does not consume. Supabase's built-in email service has a low
+hourly limit; use custom SMTP before inviting real users, and test delivery and the
+rate-limit message. The code length and lifetime follow the Supabase Auth settings.
+
 ## Session behavior
 
 The server calls Supabase Auth REST over HTTPS with a 15-second timeout and refuses
@@ -49,11 +64,17 @@ Offline tests mock Supabase and cover missing configuration, signup without auto
 login, invalid credentials, account mismatch, per-session separation, logout despite
 remote/cleanup errors, and sanitized provider errors. Existing document-flow tests
 explicitly mock the gate; they do not bypass authentication in production.
+`tests/test_password_recovery.py` covers the forgot-password flow with a mocked
+provider: neutral code-sent message, local input validation, wrong/expired code,
+sign-out of the recovery session and no automatic login. It does not send real email.
 
 The owner reported signup/login/logout working on the hosted app. Remaining release
 acceptance must verify email delivery, confirmed login,
 wrong password, two independent accounts/browser sessions, logout, expiration and
-network failure. No real Supabase account or authentication request was created during
+network failure. For forgot password, also verify on the hosted app with a disposable
+account: code email arrives, wrong code is rejected, correct code sets a new password,
+the old password no longer works, and a second reset request is rate-limited sensibly.
+No real Supabase account or authentication request was created during
 implementation. This is not persistent multi-user document-storage acceptance.
 
 References: https://github.com/supabase/auth/blob/master/openapi.yaml
