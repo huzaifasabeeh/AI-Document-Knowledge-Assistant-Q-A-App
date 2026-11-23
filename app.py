@@ -7,6 +7,156 @@ from src.knowledge_assistant.persistence_ui import saved_workspace_controls, per
 from src.knowledge_assistant.stage_timing import response_timing, span
 
 st.set_page_config(page_title='Document Knowledge Assistant', page_icon='📚', layout='wide')
+
+st.html("""
+<style>
+/* Main app and background: ChatGPT dark theme */
+[data-testid="stAppViewContainer"] {
+    background-color: #212121;
+    color: #ececec;
+}
+
+[data-testid="stSidebar"] {
+    background-color: #171717;
+    border-right: 1px solid #2d2d2d;
+}
+
+[data-testid="stHeader"] {
+    background-color: rgba(33, 33, 33, 0.85);
+    backdrop-filter: blur(8px);
+}
+
+/* Chat message bubbles: ChatGPT style */
+[data-testid="stChatMessage"] {
+    background-color: transparent;
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 0.85rem;
+    border: 1px solid transparent;
+}
+
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]),
+[data-testid="stChatMessage"]:has([aria-label="🧑‍💼"]) {
+    background-color: #2f2f2f !important;
+    border: 1px solid #3d3d3d !important;
+}
+
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]),
+[data-testid="stChatMessage"]:has([aria-label="🤖"]) {
+    background-color: #262626 !important;
+    border: 1px solid #333333 !important;
+}
+
+/* Transform raw text inside chat messages into clean typography */
+[data-testid="stChatMessage"] [data-testid="stText"] {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    font-size: 0.98rem !important;
+    line-height: 1.65 !important;
+    color: #ececec !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+/* Sleek metrics cards */
+[data-testid="stMetric"] {
+    background-color: #262626;
+    border: 1px solid #333333;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+[data-testid="stMetricLabel"] {
+    color: #9e9e9e !important;
+    font-size: 0.82rem !important;
+    font-weight: 500 !important;
+}
+
+[data-testid="stMetricValue"] {
+    color: #ececec !important;
+    font-size: 1.35rem !important;
+    font-weight: 600 !important;
+}
+
+/* Modern buttons */
+div.stButton > button {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid #3d3d3d;
+}
+
+div.stButton > button[kind="primary"] {
+    background-color: #10a37f;
+    border: 1px solid #10a37f;
+    color: #ffffff;
+}
+
+div.stButton > button[kind="primary"]:hover {
+    background-color: #1a7f64;
+    border-color: #1a7f64;
+}
+
+/* Chat input bar floating at bottom */
+[data-testid="stChatInput"] {
+    border-radius: 16px;
+    border: 1px solid #444444;
+    background-color: #2f2f2f;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+[data-testid="stChatInput"] textarea {
+    color: #ececec;
+}
+
+/* Expanders */
+div[data-testid="stExpander"] {
+    background-color: #1c1c1c;
+    border: 1px solid #2e2e2e;
+    border-radius: 8px;
+}
+
+/* Hero card styling */
+.chatgpt-hero-card {
+    background: linear-gradient(135deg, #262626 0%, #1e1e1e 100%);
+    border: 1px solid #363636;
+    border-radius: 14px;
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.chatgpt-hero-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.4rem;
+}
+.chatgpt-hero-sub {
+    font-size: 0.95rem;
+    color: #a0a0a0;
+    margin-bottom: 1.25rem;
+}
+.chatgpt-prompt-grid {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.chatgpt-prompt-pill {
+    background-color: #2d2d2d;
+    border: 1px solid #404040;
+    border-radius: 10px;
+    padding: 0.6rem 0.9rem;
+    color: #d6d6d6;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+</style>
+""")
+
 from src.knowledge_assistant.auth_ui import require_login, setting
 from src.knowledge_assistant.providers import provider_config, configured_assistant
 require_login()
@@ -156,11 +306,22 @@ if st.session_state.messages:
     st.caption('Clear chat keeps documents indexed. Downloaded copies remain on your device after reset.')
 
 if not st.session_state.messages:
-    st.subheader('Find answers with page references')
-    st.write('Once indexed, ask a specific question such as “Who approves leave requests?” or “What is the expense claim deadline?”')
+    st.html("""
+    <div class="chatgpt-hero-card">
+        <div class="chatgpt-hero-title">📚 Document Knowledge Assistant</div>
+        <div class="chatgpt-hero-sub">Upload documents in the sidebar, preview pages locally, and ask questions with verified page citations.</div>
+        <div class="chatgpt-prompt-grid">
+            <span class="chatgpt-prompt-pill">💡 "Who approves leave requests?"</span>
+            <span class="chatgpt-prompt-pill">💡 "What is the expense claim deadline?"</span>
+            <span class="chatgpt-prompt-pill">💡 "Summarize onboarding requirements"</span>
+        </div>
+    </div>
+    """)
     st.caption('References use physical PDF page numbers starting at 1. Check the cited text before relying on an answer.')
 for message in st.session_state.messages:
-    with st.chat_message(message['role']):
+    role = message['role']
+    avatar = '🧑‍💼' if role == 'user' else '🤖'
+    with st.chat_message(role, avatar=avatar):
         st.text(message['content'])
         if message.get('sources'):
             with st.expander('View supporting passages'):
