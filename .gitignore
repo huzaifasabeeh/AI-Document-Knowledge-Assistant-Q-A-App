@@ -7,6 +7,11 @@
 # Machine-local CLI settings are created from the reviewed example.
 /supabase/config.toml
 
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
 # Python and editor files
 __pycache__/
 *.py[cod]
