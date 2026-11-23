@@ -20,7 +20,7 @@ import { useAuth } from "@/lib/auth-context";
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { startNewChat } = useDocs();
+  const { startNewChat, messages, storageUsedMb } = useDocs();
   const { user } = useAuth();
 
   const handleNewChat = () => {
@@ -35,11 +35,7 @@ export function Sidebar() {
     { label: "Chat history", href: "/history", icon: Clock },
   ];
 
-  const recentChats = [
-    { title: "Q3 performance overview", active: pathname === "/" },
-    { title: "Compare vendor proposals", active: false },
-    { title: "Onboarding policy summary", active: false },
-  ];
+  const recentTitle = messages.length > 0 ? messages[0].content.slice(0, 28) + "..." : "New conversation";
 
   return (
     <aside className="w-64 flex-shrink-0 border-r border-[#E5EBE8] dark:border-[#22423B] bg-white dark:bg-[#132723] flex flex-col justify-between h-screen overflow-y-auto select-none transition-colors duration-200">
@@ -62,7 +58,7 @@ export function Sidebar() {
         {/* Workspace selector */}
         <div className="px-4 pt-3 pb-2">
           <button className="flex items-center gap-1.5 text-xs text-[#6B7C77] dark:text-[#94A7A1] hover:text-[#172B28] dark:hover:text-white font-medium transition-colors">
-            <span>{user?.workspaceName || "Personal workspace"}</span>
+            <span>{user?.workspaceName || `${user?.name || "User"}'s workspace`}</span>
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -106,39 +102,36 @@ export function Sidebar() {
             Recent chats
           </span>
           <div className="mt-2 space-y-1">
-            {recentChats.map((chat) => (
-              <Link
-                key={chat.title}
-                href="/"
-                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors ${
-                  chat.active
-                    ? "bg-[#F1F6F4] dark:bg-[#1D3B34] text-[#172B28] dark:text-white font-medium"
-                    : "text-[#5C7069] dark:text-[#9FB1AA] hover:bg-[#F6F8F7] dark:hover:bg-[#18332D]"
-                }`}
-              >
-                <MessageSquare className="w-3.5 h-3.5 text-[#8A9C96]" />
-                <span className="truncate">{chat.title}</span>
-              </Link>
-            ))}
+            <Link
+              href="/"
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                pathname === "/"
+                  ? "bg-[#F1F6F4] dark:bg-[#1D3B34] text-[#172B28] dark:text-white font-medium"
+                  : "text-[#5C7069] dark:text-[#9FB1AA] hover:bg-[#F6F8F7] dark:hover:bg-[#18332D]"
+              }`}
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-[#8A9C96]" />
+              <span className="truncate">{recentTitle}</span>
+            </Link>
           </div>
         </div>
       </div>
 
       {/* Footer / Storage & Settings */}
       <div className="p-3 border-t border-[#E5EBE8] dark:border-[#22423B] space-y-3">
-        {/* Storage card */}
+        {/* Dynamic Storage card */}
         <div className="p-3 rounded-lg bg-[#F6F8F7] dark:bg-[#172E29] border border-[#E5EBE8] dark:border-[#26443B]">
           <div className="text-xs font-semibold text-[#172B28] dark:text-[#F2F7F5]">
             Your knowledge, connected
           </div>
           <div className="text-[11px] text-[#6B7C77] dark:text-[#94A7A1] mt-1">
-            {user?.storageUsedMb || 128} MB of {((user?.storageLimitMb || 1024) / 1024).toFixed(0)} GB used
+            {storageUsedMb.toFixed(1)} MB of 1 GB used
           </div>
           <div className="w-full bg-[#E5EBE8] dark:bg-[#25423A] h-1.5 rounded-full mt-2 overflow-hidden">
             <div
-              className="bg-[#147D65] h-full rounded-full"
+              className="bg-[#147D65] h-full rounded-full transition-all duration-300"
               style={{
-                width: `${((user?.storageUsedMb || 128) / (user?.storageLimitMb || 1024)) * 100}%`,
+                width: `${Math.min(100, (storageUsedMb / 1024) * 100)}%`,
               }}
             />
           </div>

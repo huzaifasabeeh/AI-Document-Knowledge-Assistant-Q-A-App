@@ -4,20 +4,44 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthSplitLayout } from "@/components/AuthSplitLayout";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const [email, setEmail] = useState("alex.morgan@acme.co");
-  const [password, setPassword] = useState("••••••••••••");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password);
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter both email and password.");
+      return;
+    }
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      const res = await login(email, password);
+      if (res.success) {
+        router.push("/");
+      } else {
+        setError(res.error || "Failed to sign in. Please verify your credentials.");
+      }
+    } catch {
+      setError("Sign in failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleDemo = async () => {
+    setIsSubmitting(true);
+    await login("user@docmind.ai", "demo12345");
     router.push("/");
   };
 
@@ -29,17 +53,22 @@ export default function LoginPage() {
             Welcome back
           </h2>
           <p className="text-xs text-[#6B7C77] dark:text-[#94A7A1] mt-1">
-            Your knowledge is right where you left it.
+            Sign in to access your documents and private knowledge base.
           </p>
         </div>
+
+        {error && (
+          <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
         {/* Google SSO Button */}
         <button
           type="button"
-          onClick={() => {
-            login(email, password);
-            router.push("/");
-          }}
+          onClick={handleGoogleDemo}
+          disabled={isSubmitting}
           className="w-full py-2.5 px-4 rounded-xl border border-[#E5EBE8] dark:border-[#26483F] hover:bg-[#F6F8F7] dark:hover:bg-[#162E29] flex items-center justify-center gap-2.5 text-xs font-semibold text-[#172B28] dark:text-[#F2F7F5] transition-colors"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -80,6 +109,7 @@ export default function LoginPage() {
             <input
               type="email"
               required
+              placeholder="name@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-2.5 rounded-xl border border-[#E5EBE8] dark:border-[#25463D] bg-transparent text-xs text-[#172B28] dark:text-[#F2F7F5] focus:outline-hidden focus:ring-1 focus:ring-[#147D65]"
@@ -94,6 +124,7 @@ export default function LoginPage() {
               <input
                 type={showPass ? "text" : "password"}
                 required
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full p-2.5 pr-9 rounded-xl border border-[#E5EBE8] dark:border-[#25463D] bg-transparent text-xs text-[#172B28] dark:text-[#F2F7F5] focus:outline-hidden focus:ring-1 focus:ring-[#147D65]"
@@ -128,9 +159,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full py-2.5 rounded-xl bg-[#147D65] hover:bg-[#0E634F] text-white font-medium text-xs shadow-xs transition-colors"
+            disabled={isSubmitting}
+            className="w-full py-2.5 rounded-xl bg-[#147D65] hover:bg-[#0E634F] disabled:opacity-50 text-white font-medium text-xs shadow-xs transition-colors"
           >
-            Sign in
+            {isSubmitting ? "Signing in..." : "Sign in"}
           </button>
         </form>
 

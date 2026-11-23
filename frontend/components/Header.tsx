@@ -24,6 +24,15 @@ export function Header({
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
   return (
     <header className="h-14 border-b border-[#E5EBE8] dark:border-[#22423B] bg-white dark:bg-[#132723] px-6 flex items-center justify-between transition-colors duration-200">
       {/* Left breadcrumb info */}
@@ -65,18 +74,17 @@ export function Header({
           )}
         </button>
 
-        {/* Profile Avatar */}
+        {/* Profile Avatar with user initials */}
         <Link href="/settings" className="relative block">
           {user?.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={user.avatarUrl}
               alt={user.name}
               className="w-8 h-8 rounded-full object-cover ring-2 ring-[#147D65]/20 hover:ring-[#147D65] transition-all"
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-[#147D65] text-white flex items-center justify-center font-medium text-xs">
-              {user?.name?.slice(0, 2).toUpperCase() || "AM"}
+            <div className="w-8 h-8 rounded-full bg-[#147D65] text-white flex items-center justify-center font-semibold text-xs shadow-xs hover:bg-[#0E634F] transition-colors">
+              {getInitials(user?.name)}
             </div>
           )}
         </Link>

@@ -21,6 +21,7 @@ import { InlineCitation } from "@/lib/types";
 export function ChatArea() {
   const {
     messages,
+    documents,
     selectedDocNames,
     sendMessage,
     openEvidence,
@@ -53,9 +54,10 @@ export function ChatArea() {
   const handleCitationClick = (citation: InlineCitation) => {
     openEvidence({
       docTitle: citation.docName.replace(/\.[^/.]+$/, ""),
-      page: citation.pages.includes("8") ? 8 : 6,
-      heading: citation.docName.includes("Q3") ? "3. Revenue performance" : "Market outlook",
+      page: parseInt(citation.pages.replace(/\D/g, "")) || 1,
+      heading: `Passage from ${citation.docName}`,
       highlightSnippet: citation.highlightText,
+      fullText: citation.fullSnippet || citation.highlightText,
     });
   };
 
@@ -63,20 +65,20 @@ export function ChatArea() {
     {
       icon: Layers,
       title: "See the bigger picture",
-      desc: "Turn a long document into a clear, concise summary.",
-      query: "Summarize the key findings across all quarterly reports.",
+      desc: "Turn your uploaded documents into clear, concise summaries.",
+      query: "Summarize the key findings and goals from the uploaded documents.",
     },
     {
       icon: ListFilter,
       title: "Find the details that matter",
-      desc: "Extract key dates, metrics, and action items.",
-      query: "What are the primary metrics and dates highlighted for Q3 and Q4?",
+      desc: "Extract key dates, metrics, numbers and action items.",
+      query: "What are the most critical dates, figures, and deliverables mentioned?",
     },
     {
       icon: Columns,
       title: "Connect the dots",
-      desc: "Compare findings across multiple documents.",
-      query: "What drove revenue growth in Q3, and how does it compare with the market outlook?",
+      desc: "Compare findings, identify patterns and verify source citations.",
+      query: "Compare the key themes and findings across the indexed files.",
     },
   ];
 
@@ -86,18 +88,18 @@ export function ChatArea() {
       <div className="px-8 py-3 flex items-center justify-between border-b border-[#E5EBE8] dark:border-[#22423B] bg-white/70 dark:bg-[#132723]/70 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAF4EF] dark:bg-[#1A3831] text-[#147D65] dark:text-[#4ADE80]">
-            {selectedDocNames.length} documents selected
+            {selectedDocNames.length} {selectedDocNames.length === 1 ? "document" : "documents"} selected
           </span>
         </div>
         <div className="text-xs text-[#6B7C77] dark:text-[#94A7A1]">
-          Q3 research collection
+          {documents.length > 0 ? "Knowledge Base Connected" : "No documents attached"}
         </div>
       </div>
 
       {/* Main chat view or empty state */}
       <div className="flex-1 overflow-y-auto px-6 lg:px-16 py-8 space-y-8">
         {messages.length === 0 ? (
-          /* Empty State (Screenshot 1) */
+          /* Real Empty State */
           <div className="max-w-3xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center pt-8">
             <div className="w-12 h-12 rounded-xl bg-[#147D65] flex items-center justify-center text-white mb-6 shadow-sm">
               <FileText className="w-6 h-6 stroke-[2]" />
@@ -111,7 +113,7 @@ export function ChatArea() {
               What would you like to know about your documents?
             </h1>
 
-            {/* 3 Cards */}
+            {/* 3 Prompt Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mt-12 text-left">
               {promptCards.map((card) => {
                 const Icon = card.icon;
@@ -136,9 +138,27 @@ export function ChatArea() {
                 );
               })}
             </div>
+
+            {/* Recently added real files pills */}
+            {documents.length > 0 && (
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs">
+                <span className="text-[#8A9C96] text-[11px] uppercase tracking-wider font-semibold mr-1">
+                  Indexed sources:
+                </span>
+                {documents.slice(0, 4).map((d) => (
+                  <span
+                    key={d.id}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F] text-xs text-[#172B28] dark:text-[#F2F7F5]"
+                  >
+                    <FileText className="w-3 h-3 text-[#147D65] dark:text-[#4ADE80]" />
+                    <span>{d.name}</span>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
-          /* Message Stream (Screenshots 5 & 13) */
+          /* Message Stream */
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.map((msg) => (
               <div key={msg.id} className="space-y-4">
@@ -174,21 +194,18 @@ export function ChatArea() {
                         DocuMind
                       </span>
                       <span className="text-xs text-[#6B7C77] dark:text-[#94A7A1]">
-                        Based on your documents
+                        Grounded in your documents
                       </span>
                     </div>
 
                     {/* Summary intro */}
-                    <p className="text-sm font-medium text-[#172B28] dark:text-[#E2EBE7] leading-relaxed">
+                    <p className="text-sm font-medium text-[#172B28] dark:text-[#E2EBE7] leading-relaxed whitespace-pre-line">
                       {msg.content}
                     </p>
 
                     {/* Structured Key Points */}
-                    {msg.points && (
+                    {msg.points && msg.points.length > 0 && (
                       <div className="space-y-4 pt-1">
-                        <div className="text-xs font-bold text-[#172B28] dark:text-[#F2F7F5]">
-                          Three things stand out
-                        </div>
                         <div className="space-y-3">
                           {msg.points.map((pt) => (
                             <div key={pt.num} className="text-xs space-y-1">
@@ -258,7 +275,7 @@ export function ChatArea() {
                       </div>
 
                       <div>
-                        {msg.groundingSources || 3} sources • {msg.latency || "1.2s"}
+                        {msg.groundingSources || 0} sources • {msg.latency || "0.8s"}
                       </div>
                     </div>
                   </div>
@@ -287,7 +304,11 @@ export function ChatArea() {
                 }
               }}
               rows={2}
-              placeholder="Ask anything about your documents..."
+              placeholder={
+                documents.length > 0
+                  ? "Ask anything about your documents..."
+                  : "Attach a PDF or ask general document queries..."
+              }
               className="w-full bg-transparent resize-none border-0 text-sm text-[#172B28] dark:text-[#F2F7F5] placeholder-[#8A9C96] focus:outline-hidden px-1"
             />
 
@@ -307,7 +328,7 @@ export function ChatArea() {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#4A5D57] dark:text-[#AFC1B9] hover:bg-[#F6F8F7] dark:hover:bg-[#1E3B33] transition-colors"
               >
                 <Paperclip className="w-3.5 h-3.5" />
-                <span>{isUploading ? "Indexing..." : "+ Attach documents"}</span>
+                <span>{isUploading ? "Indexing into Chroma..." : "+ Attach documents"}</span>
               </button>
 
               <button
