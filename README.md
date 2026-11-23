@@ -8,19 +8,29 @@ reindexing are verified locally. The latest local 40-case retest met quality
 thresholds, but mandatory every-response latency acceptance failed. Hosted
 acceptance and final client sign-off remain pending.
 
-## Current status — 4 November 2026
+## Current status — 23 November 2026
 
-PRs #5 (saved-document binding) and #6 (provider selection) are merged. Their
-automated checks passed. The owner reported signup/login/logout working; the
-public login page was observed loading. The later local verification is recorded
-in the checkpoint below. Exact deployed revision and production acceptance have
-not been verified by those local checks.
+All development PRs are merged into main: PR #1 (hosted handoff), PR #11 (local
+evaluation release, deployment lock and scoring guards) and PR #12 (forgot
+password / email code recovery). Current main HEAD is `5192013`. GitHub CI
+tested both `requirements-lock.txt` and `requirements.txt` matrix legs for
+PR #11's head (`192925f`); PR #12 added four files and 177 test lines.
 
-Latest local quality: 30/30 correct supported answers, 36/36 supported citation
-pairs, 36/36 claims cited and 10/10 appropriate abstentions. H03 took 11.8807s,
-so 39/40 responses met the mandatory <=10.000s browser deadline and full-set
-acceptance failed. Four later bounded diagnostics did not reproduce the slowdown;
-there is no proven bottleneck or performance fix. Original failures remain intact.
+Hosting follows main with entrypoint `app.py`. The Streamlit Cloud app is at
+`ai-document-knowledge-assistant-q-a-app-f6ozauylzvgbsqda24mnfs.streamlit.app`.
+Exact deployed SHA and installed dependency inventory require hosting/build
+log verification after the latest merges.
+
+Latest local quality (run 007): 30/30 correct supported answers, 36/36
+supported citation pairs, 36/36 claims cited and 10/10 appropriate abstentions.
+H03 took 11.8807s, so 39/40 responses met the mandatory <=10.000s browser
+deadline and full-set acceptance failed. Four later bounded diagnostics did not
+reproduce the slowdown; there is no proven bottleneck or performance fix.
+Original failures remain intact. Owner-reported client tolerance is at most 3%
+slow responses (at most 1/40); observed 1/40 = 2.5% is within that tolerance.
+
+Forgot-password (email code recovery) is now implemented and tested. Requires
+Supabase email template with `{{ .Token }}`. See [account auth](docs/16_account_auth.md).
 
 - [Recovered database setup](docs/20_database_setup.md)
 - [Reproducible local setup](docs/local_setup_guide.md)

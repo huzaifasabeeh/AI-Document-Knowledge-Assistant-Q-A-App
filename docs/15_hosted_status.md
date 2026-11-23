@@ -1,6 +1,7 @@
 # Hosted demo and final handoff checkpoint
 
-Recorded 23 October 2026. This is a progress record, not client acceptance.
+Updated 23 November 2026. This is a progress record, not client acceptance.
+Earlier entries from 23 October 2026 are retained below as historical records.
 
 ## Hosted evidence
 
@@ -15,6 +16,22 @@ Recorded 23 October 2026. This is a progress record, not client acceptance.
   recorded; this does not establish video support or full PDF acceptance.
 - Exact hosted commit has not been independently verified. A main-branch name
   alone is insufficient to identify the running revision.
+
+## Update — 23 November 2026
+
+All development PRs are now merged into main (PR #1, #11, #12). Current main
+HEAD is `5192013`. The app auto-deploys from main. Features since last hosted
+verification include the full evaluation/deployment-lock tooling (PR #11) and
+forgot-password / email code recovery (PR #12). Exact deployed SHA requires
+confirmation from Streamlit Cloud build logs after the latest merges.
+
+Previously owner-reported hosted successes (Gemini indexing, answer with
+citation, save/restore, autosave recovery) are historical reports from an
+earlier main revision. The forgot-password feature requires a Supabase email
+template update (Reset Password must contain `{{ .Token }}`).
+
+Local test status on current main: 138 tests + 3 subtests passed in 9.07s.
+PR #11 CI verified 318 passed, 7 skipped, 3 subtests on its head commit.
 
 ## Completion boundary
 

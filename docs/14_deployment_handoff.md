@@ -2,12 +2,21 @@
 
 ## Delivery status
 
-Update, 23 October 2026: the owner deployed the main branch to Streamlit
-Community Cloud with Python 3.12 and app.py. Hosted startup was observed on
-21 October and the owner subsequently reported successful use without errors.
-See document 15 for evidence and limitations. The container remains unbuilt.
-The deployment-preparation branch is now incorporated into the handoff candidate;
-that candidate has not yet been published or deployed.
+Update, 23 November 2026: all development PRs are merged into main. PR #1
+(hosted handoff), PR #11 (evaluation release, deployment lock, scoring guards)
+and PR #12 (forgot password / email code recovery) are all in production.
+Current main HEAD is `5192013`. The app auto-deploys from main to Streamlit
+Community Cloud. Exact deployed SHA and installed dependency inventory require
+verification from hosting build logs after the latest merges. Authentication,
+saved workspaces, PDF storage and account isolation are fully implemented.
+The forgot-password feature requires a Supabase email template change.
+
+Rollback candidates: `69b998a` (main before PR #12) or `7fdfc7c` (old main
+before PR #11). Code rollback does not roll back database schema; the
+forgot-password feature uses existing Supabase Auth endpoints and adds no
+migrations.
+
+Earlier deployment notes are retained below as historical context.
 
 The following preparation notes describe the earlier checkpoint:
 
@@ -64,23 +73,29 @@ No persistent document volume is configured. Stop the container with
 
 ## Hosted release boundary
 
-Choose the private hosting target before adapting these commands to hosting.
-Use host-managed authentication/access restrictions and HTTPS before remote
-client access. The app itself does not implement account authentication,
-automatic idle-session cleanup or persistent chat storage. Do not publish an
-unrestricted endpoint with a funded provider key.
+The app is hosted on Streamlit Community Cloud, auto-deploying from main.
+Account authentication (signup/login/logout/forgot-password), saved workspaces
+with private PDF storage and owner-scoped RLS are all implemented. The app
+uses Supabase Auth REST over HTTPS with per-request validation and session
+isolation. Never publish credentials or use service-role keys.
 
-Before accepting real documents, agree on retention and provider processing,
-complete the deferred acceptance session in document 13, and record reviewer
-approval. For a rollback, deploy the previously accepted image/commit and
-restart sessions. Existing session data is not migrated or restored.
+Before accepting real client documents, complete the hosted verification
+checklist: confirm deployed SHA, test all user flows with disposable accounts,
+verify account/PDF isolation, and record reviewer approval. For rollback,
+deploy a revert commit on main (no force push) and verify the reverted SHA.
+Code rollback does not undo database writes.
 
 ## Remaining decisions and evidence
 
-- Hosting target: Streamlit Community Cloud; access restrictions remain unverified.
-- Container build: not run. Hosted Streamlit startup: observed on 21 October.
-- Live AI evaluation and final manual checks: deferred.
-- API credits and live-call authorization: required before live evaluation.
+- Hosting target: Streamlit Community Cloud, auto-deploy from main.
+- Container build: not run; not required for Streamlit Cloud hosting.
+- Local evaluation (run 007): quality gates met, mandatory per-response latency
+  failed (H03 11.8807s). Owner-reported client tolerance 2-3% (1/40 = 2.5%
+  within tolerance). Disposition needed.
+- Hosted verification: exact deployed SHA and functional smoke test pending
+  after PR #12 merge. Owner should check build logs.
+- Forgot-password: requires Supabase email template update (`{{ .Token }}`).
+- API credits: Gemini free tier used for verification. OpenAI credits unavailable.
 - Reviewer acceptance and client handoff: pending.
 
 No task is marked complete solely because its deployment instructions exist.
