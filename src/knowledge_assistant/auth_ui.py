@@ -1,8 +1,19 @@
 """Fail-closed account gate. No document/chat persistence is added here."""
 import os
+import secrets
+import time
 import streamlit as st
 from .auth import (AuthClient, AuthError, RECOVERY_SENT, clear_session, validate_credentials,
                    validate_email, validate_recovery)
+
+_ACTIVE_SESSIONS = {}
+
+
+def _clean_sessions():
+    now = time.time()
+    stale = [k for k, v in _ACTIVE_SESSIONS.items() if now - v.get('created_at', 0) > 86400 * 7]
+    for k in stale:
+        _ACTIVE_SESSIONS.pop(k, None)
 
 
 def setting(name):
@@ -56,10 +67,25 @@ def require_login():
         st.stop()
 
     token = st.session_state.get('auth_token')
+    if not token and hasattr(st, 'query_params') and 'session' in st.query_params:
+        session_id = st.query_params.get('session')
+        cached = _ACTIVE_SESSIONS.get(session_id)
+        if cached and time.time() - cached.get('created_at', 0) < 86400 * 7:
+            try:
+                user = client.user(cached['token'])
+                st.session_state.auth_token = cached['token']
+                st.session_state.auth_user_id = user['id']
+                token = cached['token']
+            except AuthError:
+                _ACTIVE_SESSIONS.pop(session_id, None)
+                st.query_params.pop('session', None)
     if token:
         # Logout is offered before validation so outages cannot trap local data.
         if st.sidebar.button('Log out', key='logout'):
             remote_failed = False
+            if hasattr(st, 'query_params') and 'session' in st.query_params:
+                session_id = st.query_params.pop('session', None)
+                _ACTIVE_SESSIONS.pop(session_id, None)
             try:
                 client.logout(token)
             except AuthError:
@@ -76,6 +102,9 @@ def require_login():
             if user['id'] != st.session_state.get('auth_user_id'):
                 raise AuthError('Account changed. Please sign in again.')
         except AuthError as exc:
+            if hasattr(st, 'query_params') and 'session' in st.query_params:
+                session_id = st.query_params.pop('session', None)
+                _ACTIVE_SESSIONS.pop(session_id, None)
             cleanup_failed = clear_session(st.session_state)
             st.session_state.auth_notice = str(exc)
             if cleanup_failed:
@@ -100,6 +129,11 @@ def require_login():
                 email = validate_credentials(email, password)
                 token, user = client.login(email, password)
                 clear_session(st.session_state)
+                _clean_sessions()
+                session_id = secrets.token_urlsafe(32)
+                _ACTIVE_SESSIONS[session_id] = {'token': token, 'user_id': user['id'], 'created_at': time.time()}
+                if hasattr(st, 'query_params'):
+                    st.query_params['session'] = session_id
                 st.session_state.auth_token = token
                 st.session_state.auth_user_id = user['id']
                 st.rerun()

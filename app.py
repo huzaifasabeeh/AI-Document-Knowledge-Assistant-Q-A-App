@@ -6,156 +6,225 @@ from src.knowledge_assistant.presentation import format_answer, provider_error, 
 from src.knowledge_assistant.persistence_ui import saved_workspace_controls, persist_chat
 from src.knowledge_assistant.stage_timing import response_timing, span
 
-st.set_page_config(page_title='Document Knowledge Assistant', page_icon='📚', layout='wide')
+st.set_page_config(page_title='DocMind — Document Knowledge Assistant', page_icon='📚', layout='wide')
 
-st.html("""
+
+def get_docmind_css(is_dark):
+    bg = '#0f172a' if is_dark else '#f8fafc'
+    sidebar_bg = '#1e293b' if is_dark else '#ffffff'
+    sidebar_border = '#334155' if is_dark else '#e2e8f0'
+    card_bg = '#1e293b' if is_dark else '#ffffff'
+    card_border = '#334155' if is_dark else '#e2e8f0'
+    text_primary = '#f8fafc' if is_dark else '#1e293b'
+    text_secondary = '#94a3b8' if is_dark else '#64748b'
+    user_bubble_bg = '#4f46e5'
+    user_bubble_text = '#ffffff'
+    assistant_card_bg = '#1e293b' if is_dark else '#ffffff'
+    assistant_border = '#334155' if is_dark else '#e2e8f0'
+    citation_bg = '#312e81' if is_dark else '#eef2ff'
+    citation_border = '#4338ca' if is_dark else '#c7d2fe'
+    citation_text = '#c7d2fe' if is_dark else '#4338ca'
+    input_bg = '#1e293b' if is_dark else '#ffffff'
+    input_border = '#334155' if is_dark else '#cbd5e1'
+    shadow = '0 4px 14px rgba(0, 0, 0, 0.25)' if is_dark else '0 2px 8px rgba(0, 0, 0, 0.05)'
+
+    return f"""
 <style>
-/* Main app and background: ChatGPT dark theme */
-[data-testid="stAppViewContainer"] {
-    background-color: #212121;
-    color: #ececec;
-}
+/* App View Container */
+[data-testid="stAppViewContainer"] {{
+    background-color: {bg} !important;
+    color: {text_primary} !important;
+}}
 
-[data-testid="stSidebar"] {
-    background-color: #171717;
-    border-right: 1px solid #2d2d2d;
-}
+[data-testid="stSidebar"] {{
+    background-color: {sidebar_bg} !important;
+    border-right: 1px solid {sidebar_border} !important;
+}}
 
-[data-testid="stHeader"] {
-    background-color: rgba(33, 33, 33, 0.85);
+[data-testid="stHeader"] {{
+    background-color: rgba({'15, 23, 42' if is_dark else '248, 250, 252'}, 0.85) !important;
     backdrop-filter: blur(8px);
-}
+}}
 
-/* Chat message bubbles: ChatGPT style */
-[data-testid="stChatMessage"] {
-    background-color: transparent;
-    border-radius: 12px;
-    padding: 1.1rem 1.25rem;
-    margin-bottom: 0.85rem;
-    border: 1px solid transparent;
-}
-
+/* User chat bubble: DocMind style right-aligned indigo bubble */
 [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]),
-[data-testid="stChatMessage"]:has([aria-label="🧑‍💼"]) {
-    background-color: #2f2f2f !important;
-    border: 1px solid #3d3d3d !important;
-}
-
-[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]),
-[data-testid="stChatMessage"]:has([aria-label="🤖"]) {
-    background-color: #262626 !important;
-    border: 1px solid #333333 !important;
-}
-
-/* Transform raw text inside chat messages into clean typography */
-[data-testid="stChatMessage"] [data-testid="stText"] {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+[data-testid="stChatMessage"]:has([aria-label="🧑‍💼"]) {{
+    background-color: {user_bubble_bg} !important;
+    border: none !important;
+    border-radius: 18px 18px 4px 18px !important;
+    color: {user_bubble_text} !important;
+    margin-left: auto !important;
+    max-width: 82% !important;
+    padding: 0.9rem 1.25rem !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2) !important;
+}}
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) [data-testid="stText"],
+[data-testid="stChatMessage"]:has([aria-label="🧑‍💼"]) [data-testid="stText"] {{
+    color: {user_bubble_text} !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     white-space: pre-wrap !important;
-    word-break: break-word !important;
-    font-size: 0.98rem !important;
-    line-height: 1.65 !important;
-    color: #ececec !important;
+    font-size: 0.96rem !important;
+    line-height: 1.55 !important;
     background: transparent !important;
     border: none !important;
     padding: 0 !important;
-}
+}}
 
-/* Sleek metrics cards */
-[data-testid="stMetric"] {
-    background-color: #262626;
-    border: 1px solid #333333;
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
+/* Assistant chat message: DocMind style left-aligned clean card */
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]),
+[data-testid="stChatMessage"]:has([aria-label="🤖"]) {{
+    background-color: {assistant_card_bg} !important;
+    border: 1px solid {assistant_border} !important;
+    border-radius: 18px 18px 18px 4px !important;
+    max-width: 90% !important;
+    padding: 1.1rem 1.35rem !important;
+    box-shadow: {shadow} !important;
+}}
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) [data-testid="stText"],
+[data-testid="stChatMessage"]:has([aria-label="🤖"]) [data-testid="stText"] {{
+    color: {text_primary} !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    white-space: pre-wrap !important;
+    font-size: 0.96rem !important;
+    line-height: 1.65 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}}
 
-[data-testid="stMetricLabel"] {
-    color: #9e9e9e !important;
-    font-size: 0.82rem !important;
+/* Metric cards: DocMind style */
+[data-testid="stMetric"] {{
+    background-color: {card_bg} !important;
+    border: 1px solid {card_border} !important;
+    border-radius: 12px !important;
+    padding: 0.75rem 1rem !important;
+    box-shadow: {shadow} !important;
+}}
+[data-testid="stMetricLabel"] {{
+    color: {text_secondary} !important;
+    font-size: 0.8rem !important;
     font-weight: 500 !important;
-}
-
-[data-testid="stMetricValue"] {
-    color: #ececec !important;
+}}
+[data-testid="stMetricValue"] {{
+    color: {text_primary} !important;
     font-size: 1.35rem !important;
+    font-weight: 700 !important;
+}}
+
+/* New conversation / Reset button in sidebar */
+[data-testid="stSidebar"] div.stButton > button[key="reset"],
+[data-testid="stSidebar"] div.stButton > button:first-child {{
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
     font-weight: 600 !important;
-}
+    border-radius: 10px !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3) !important;
+}}
 
-/* Modern buttons */
-div.stButton > button {
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    border: 1px solid #3d3d3d;
-}
+div.stButton > button {{
+    border-radius: 10px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}}
+div.stButton > button[kind="primary"] {{
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3) !important;
+}}
 
-div.stButton > button[kind="primary"] {
-    background-color: #10a37f;
-    border: 1px solid #10a37f;
-    color: #ffffff;
-}
-
-div.stButton > button[kind="primary"]:hover {
-    background-color: #1a7f64;
-    border-color: #1a7f64;
-}
-
-/* Chat input bar floating at bottom */
-[data-testid="stChatInput"] {
-    border-radius: 16px;
-    border: 1px solid #444444;
-    background-color: #2f2f2f;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-}
-
-[data-testid="stChatInput"] textarea {
-    color: #ececec;
-}
+/* Floating Chat input bar */
+[data-testid="stChatInput"] {{
+    border-radius: 16px !important;
+    border: 1px solid {input_border} !important;
+    background-color: {input_bg} !important;
+    box-shadow: {shadow} !important;
+}}
+[data-testid="stChatInput"] textarea {{
+    color: {text_primary} !important;
+}}
 
 /* Expanders */
-div[data-testid="stExpander"] {
-    background-color: #1c1c1c;
-    border: 1px solid #2e2e2e;
-    border-radius: 8px;
-}
+div[data-testid="stExpander"] {{
+    background-color: {card_bg} !important;
+    border: 1px solid {card_border} !important;
+    border-radius: 10px !important;
+}}
 
-/* Hero card styling */
-.chatgpt-hero-card {
-    background: linear-gradient(135deg, #262626 0%, #1e1e1e 100%);
-    border: 1px solid #363636;
-    border-radius: 14px;
-    padding: 1.75rem 2rem;
+/* DocMind citation pills */
+.docmind-pills-row {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.65rem 0 0.85rem 0;
+}}
+.docmind-pill {{
+    display: inline-flex;
+    align-items: center;
+    background-color: {citation_bg};
+    color: {citation_text};
+    border: 1px solid {citation_border};
+    border-radius: 8px;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+}}
+
+/* DocMind hero card */
+.docmind-hero {{
+    background: linear-gradient(135deg, {'#1e293b 0%, #0f172a 100%' if is_dark else '#ffffff 0%, #f1f5f9 100%'});
+    border: 1px solid {card_border};
+    border-radius: 16px;
+    padding: 2.25rem 2rem;
     margin-bottom: 1.5rem;
     text-align: center;
-}
-.chatgpt-hero-title {
-    font-size: 1.75rem;
+    box-shadow: {shadow};
+}}
+.docmind-hero-badge {{
+    display: inline-block;
+    background-color: {citation_bg};
+    color: {citation_text};
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
     font-weight: 600;
-    color: #ffffff;
+    margin-bottom: 0.85rem;
+    border: 1px solid {citation_border};
+}}
+.docmind-hero-title {{
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: {text_primary};
     margin-bottom: 0.4rem;
-}
-.chatgpt-hero-sub {
+}}
+.docmind-hero-sub {{
     font-size: 0.95rem;
-    color: #a0a0a0;
-    margin-bottom: 1.25rem;
-}
-.chatgpt-prompt-grid {
+    color: {text_secondary};
+    max-width: 580px;
+    margin: 0 auto 1.35rem auto;
+}}
+.docmind-chips {{
     display: flex;
     justify-content: center;
-    gap: 0.75rem;
+    gap: 0.65rem;
     flex-wrap: wrap;
-}
-.chatgpt-prompt-pill {
-    background-color: #2d2d2d;
-    border: 1px solid #404040;
-    border-radius: 10px;
-    padding: 0.6rem 0.9rem;
-    color: #d6d6d6;
-    font-size: 0.85rem;
-    display: inline-block;
-}
+}}
+.docmind-chip {{
+    background-color: {card_bg};
+    border: 1px solid {card_border};
+    border-radius: 20px;
+    padding: 0.5rem 0.9rem;
+    color: {text_primary};
+    font-size: 0.82rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}}
 </style>
-""")
+"""
+
+
+is_dark = st.session_state.get('theme_choice') == '🌙 Dark'
+st.html(get_docmind_css(is_dark))
 
 from src.knowledge_assistant.auth_ui import require_login, setting
 from src.knowledge_assistant.providers import provider_config, configured_assistant
@@ -175,7 +244,13 @@ for key, default in [('messages', []), ('documents', []), ('passage_count', 0),
         st.session_state[key] = default
 
 with st.sidebar:
-    st.header('Your documents')
+    theme_col1, theme_col2 = st.columns([3, 2])
+    with theme_col1:
+        st.markdown('### ✦ **DocMind**')
+    with theme_col2:
+        st.segmented_control('Theme', options=['☀️ Light', '🌙 Dark'],
+                             default=st.session_state.get('theme_choice', '☀️ Light'),
+                             key='theme_choice', label_visibility='collapsed')
     st.caption('Text PDFs · up to 10 files · 10 MB each · 200 pages total')
     if st.button('Reset documents and chat', key='reset', width='stretch'):
         engine = st.session_state.get('assistant') or st.session_state.get('failed_engine')
@@ -307,13 +382,14 @@ if st.session_state.messages:
 
 if not st.session_state.messages:
     st.html("""
-    <div class="chatgpt-hero-card">
-        <div class="chatgpt-hero-title">📚 Document Knowledge Assistant</div>
-        <div class="chatgpt-hero-sub">Upload documents in the sidebar, preview pages locally, and ask questions with verified page citations.</div>
-        <div class="chatgpt-prompt-grid">
-            <span class="chatgpt-prompt-pill">💡 "Who approves leave requests?"</span>
-            <span class="chatgpt-prompt-pill">💡 "What is the expense claim deadline?"</span>
-            <span class="chatgpt-prompt-pill">💡 "Summarize onboarding requirements"</span>
+    <div class="docmind-hero">
+        <span class="docmind-hero-badge">✦ AI Grounded Document Assistant</span>
+        <div class="docmind-hero-title">Ask anything about your documents</div>
+        <div class="docmind-hero-sub">Upload PDFs from the sidebar, preview pages locally, and ask questions with verified physical page citations.</div>
+        <div class="docmind-chips">
+            <span class="docmind-chip">💡 "What is the annual leave entitlement?"</span>
+            <span class="docmind-chip">💡 "Who must approve leave requests?"</span>
+            <span class="docmind-chip">💡 "What is the expense claim deadline?"</span>
         </div>
     </div>
     """)
@@ -324,6 +400,8 @@ for message in st.session_state.messages:
     with st.chat_message(role, avatar=avatar):
         st.text(message['content'])
         if message.get('sources'):
+            pills = ''.join([f'<span class="docmind-pill">📄 {s["filename"]} · Page {s["page"]}</span>' for s in message['sources']])
+            st.html(f'<div class="docmind-pills-row">{pills}</div>')
             with st.expander('View supporting passages'):
                 for source in message['sources']:
                     st.caption(f'{source["filename"]} · PDF page {source["page"]}')
