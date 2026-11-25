@@ -1,74 +1,67 @@
-export type DocumentStatus = "ready" | "indexing" | "attention" | "failed";
-
-export interface DocumentItem {
+export interface AuthUser {
   id: string;
+  email: string;
+}
+
+export interface AiHealthInfo {
+  provider: "openai" | "gemini" | null;
+  label: string | null;
+  identity: string[] | null;
+  ready: boolean;
+  error: string | null;
+}
+
+export interface HealthStatus {
+  status: string;
+  auth_configured: boolean;
+  auth_error: string | null;
+  ai: AiHealthInfo;
+  limits: {
+    max_files: number;
+    max_file_mb: number;
+    max_total_pages: number;
+  };
+}
+
+export interface UploadedDocMeta {
   name: string;
-  type: "pdf" | "docx" | "txt";
+  size_bytes: number;
   pages: number;
-  size: string;
-  collection: string;
-  status: DocumentStatus;
-  indexingProgress?: number;
-  addedAt: string;
 }
 
-export interface CollectionItem {
-  id: string;
-  name: string;
-  description: string;
-  docCount: number;
-  indexedCount: number;
-  statusText?: string;
-  isPrivate: boolean;
+export interface PreviewPage {
+  filename: string;
+  page: number;
+  text: string;
 }
 
-export interface InlineCitation {
-  id: number;
-  label: string; // e.g. "1 Q3 Financial Report - pp. 8-12"
-  docName: string;
-  pages: string;
-  highlightText: string;
-  fullSnippet?: string;
+export interface SourcePassage {
+  filename: string;
+  page: number;
+  text: string;
+}
+
+export interface ClaimItem {
+  text: string;
+  refs: {
+    filename: string;
+    page: number;
+  }[];
 }
 
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
-  timestamp: string;
-  selectedDocs?: string[];
-  points?: {
-    num: string;
-    title: string;
-    body: string;
-    citationId?: number;
-  }[];
-  citations?: InlineCitation[];
-  groundingSources?: number;
+  status?: "answered" | "conflict" | "not_found";
+  claims?: ClaimItem[];
+  sources?: SourcePassage[];
   latency?: string;
 }
 
-export interface SourceEvidenceState {
-  isOpen: boolean;
-  docTitle: string;
-  docType: string;
-  page: number;
-  totalPages: number;
-  heading: string;
-  fullText: string;
-  highlightSnippet: string;
-  relatedPassages: {
-    num: number;
-    title: string;
-    docAndPage: string;
-  }[];
-}
-
-export interface UserProfile {
-  name: string;
-  email: string;
-  avatarUrl: string;
-  workspaceName: string;
-  storageUsedMb: number;
-  storageLimitMb: number;
+export interface SavedWorkspaceSummary {
+  id: string;
+  title: string;
+  created_at: string;
+  status: "saving" | "ready" | "deleting";
 }

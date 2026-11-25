@@ -1,0 +1,4 @@
+# FastAPI HTTP adapter dependencies for the Next.js frontend.
+# Keeps requirements.txt / requirements-deployment-lock.txt unchanged for Streamlit hosting.
+-r requirements.txt
+fastapi==0.165.0

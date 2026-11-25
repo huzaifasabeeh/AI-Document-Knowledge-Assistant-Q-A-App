@@ -2,47 +2,60 @@
 
 import React, { useState } from "react";
 import {
+  AlertCircle,
+  AlertTriangle,
   ArrowUp,
-  Paperclip,
-  FileText,
-  Copy,
-  RotateCcw,
-  ThumbsUp,
-  ThumbsDown,
-  Sparkles,
   Check,
-  Columns,
-  ListFilter,
-  Layers,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Download,
+  Eraser,
+  FileText,
+  Save,
+  X,
 } from "lucide-react";
 import { useDocs } from "@/lib/doc-context";
-import { InlineCitation } from "@/lib/types";
 
 export function ChatArea() {
   const {
-    messages,
     documents,
-    selectedDocNames,
-    sendMessage,
+    totalPages,
+    passageCount,
+    previewPages,
+    messages,
+    consent,
+    indexed,
+    providerChanged,
+    cleanupBlocked,
+    savedWorkspaceId,
+    chatSaveError,
+    workspaceNotice,
+    statusError,
+    isAsking,
+    isWorkspaceBusy,
+    sendQuestion,
+    clearChatOnly,
+    downloadChat,
+    retrySaveChat,
     openEvidence,
-    uploadRealFiles,
-    isUploading,
+    clearNotices,
   } = useDocs();
+
   const [input, setInput] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [previewExpanded, setPreviewExpanded] = useState(true);
 
-  const handleFiles = (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    uploadRealFiles(Array.from(files));
-  };
+  const blocked = cleanupBlocked || providerChanged;
+  const chatEnabled = indexed && consent && !blocked;
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!input.trim()) return;
+    if (!chatEnabled || isAsking || !input.trim()) return;
     const text = input;
     setInput("");
-    sendMessage(text);
+    await sendQuestion(text);
   };
 
   const handleCopy = (id: string, text: string) => {
@@ -51,251 +64,345 @@ export function ChatArea() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleCitationClick = (citation: InlineCitation) => {
-    openEvidence({
-      docTitle: citation.docName.replace(/\.[^/.]+$/, ""),
-      page: parseInt(citation.pages.replace(/\D/g, "")) || 1,
-      heading: `Passage from ${citation.docName}`,
-      highlightSnippet: citation.highlightText,
-      fullText: citation.fullSnippet || citation.highlightText,
-    });
+  const renderStatusBanner = () => {
+    if (cleanupBlocked) {
+      return (
+        <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-400 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>Session paused: reset or restart the server to finish cleanup.</span>
+        </div>
+      );
+    }
+    if (providerChanged) {
+      return (
+        <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>AI configuration changed. Reset and re-index your documents before continuing.</span>
+        </div>
+      );
+    }
+    if (indexed && consent) {
+      return (
+        <div className="p-3 rounded-xl bg-[#EAF4EF] dark:bg-[#1A3831] border border-[#C8E2D5] dark:border-[#274F44] text-[#147D65] dark:text-[#4ADE80] text-xs flex items-center gap-2 font-medium">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <span>Documents indexed. You can ask questions below.</span>
+        </div>
+      );
+    }
+    if (indexed && !consent) {
+      return (
+        <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>Chat paused. Enable processing consent in the sidebar to continue.</span>
+        </div>
+      );
+    }
+    return (
+      <div className="p-3 rounded-xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F] text-[#5C7069] dark:text-[#9FB1AA] text-xs">
+        {savedWorkspaceId
+          ? "Saved workspace opened. Review restored answers below or enable consent and select Index documents to ask new questions."
+          : "Start in the sidebar: upload PDFs, preview their pages locally, then index when API access is available."}
+      </div>
+    );
   };
 
-  const promptCards = [
-    {
-      icon: Layers,
-      title: "See the bigger picture",
-      desc: "Turn your uploaded documents into clear, concise summaries.",
-      query: "Summarize the key findings and goals from the uploaded documents.",
-    },
-    {
-      icon: ListFilter,
-      title: "Find the details that matter",
-      desc: "Extract key dates, metrics, numbers and action items.",
-      query: "What are the most critical dates, figures, and deliverables mentioned?",
-    },
-    {
-      icon: Columns,
-      title: "Connect the dots",
-      desc: "Compare findings, identify patterns and verify source citations.",
-      query: "Compare the key themes and findings across the indexed files.",
-    },
-  ];
-
   return (
-    <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#F6F8F7] dark:bg-[#10221F] transition-colors duration-200">
-      {/* Sub-header meta */}
-      <div className="px-8 py-3 flex items-center justify-between border-b border-[#E5EBE8] dark:border-[#22423B] bg-white/70 dark:bg-[#132723]/70 backdrop-blur-sm">
-        <div className="flex items-center gap-2">
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAF4EF] dark:bg-[#1A3831] text-[#147D65] dark:text-[#4ADE80]">
-            {selectedDocNames.length} {selectedDocNames.length === 1 ? "document" : "documents"} selected
-          </span>
-        </div>
-        <div className="text-xs text-[#6B7C77] dark:text-[#94A7A1]">
-          {documents.length > 0 ? "Knowledge Base Connected" : "No documents attached"}
-        </div>
-      </div>
-
-      {/* Main chat view or empty state */}
-      <div className="flex-1 overflow-y-auto px-6 lg:px-16 py-8 space-y-8">
-        {messages.length === 0 ? (
-          /* Real Empty State */
-          <div className="max-w-3xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center pt-8">
-            <div className="w-12 h-12 rounded-xl bg-[#147D65] flex items-center justify-center text-white mb-6 shadow-sm">
-              <FileText className="w-6 h-6 stroke-[2]" />
-            </div>
-
-            <div className="text-[11px] font-semibold uppercase tracking-widest text-[#147D65] dark:text-[#4ADE80] mb-3">
-              YOUR DOCUMENTS. CONNECTED.
-            </div>
-
-            <h1 className="text-3xl lg:text-4xl font-semibold tracking-tight text-[#172B28] dark:text-[#F2F7F5] max-w-xl">
-              What would you like to know about your documents?
-            </h1>
-
-            {/* 3 Prompt Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mt-12 text-left">
-              {promptCards.map((card) => {
-                const Icon = card.icon;
-                return (
-                  <div
-                    key={card.title}
-                    onClick={() => {
-                      setInput(card.query);
-                    }}
-                    className="p-5 rounded-2xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F] shadow-xs hover:border-[#147D65] dark:hover:border-[#4ADE80] cursor-pointer transition-all group"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-[#EAF4EF] dark:bg-[#1E3B33] flex items-center justify-center text-[#147D65] dark:text-[#4ADE80] mb-3 group-hover:scale-105 transition-transform">
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <h3 className="font-semibold text-sm text-[#172B28] dark:text-[#F2F7F5] mb-1">
-                      {card.title}
-                    </h3>
-                    <p className="text-xs text-[#6B7C77] dark:text-[#94A7A1] leading-relaxed">
-                      {card.desc}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Recently added real files pills */}
-            {documents.length > 0 && (
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs">
-                <span className="text-[#8A9C96] text-[11px] uppercase tracking-wider font-semibold mr-1">
-                  Indexed sources:
-                </span>
-                {documents.slice(0, 4).map((d) => (
-                  <span
-                    key={d.id}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F] text-xs text-[#172B28] dark:text-[#F2F7F5]"
-                  >
-                    <FileText className="w-3 h-3 text-[#147D65] dark:text-[#4ADE80]" />
-                    <span>{d.name}</span>
-                  </span>
-                ))}
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#F6F8F7] dark:bg-[#10221F] transition-colors duration-200">
+      {/* Main Scroll Area */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 lg:px-12 py-6 space-y-5">
+        <div className="max-w-3xl mx-auto space-y-4">
+          {/* Top Metrics Strip on smaller viewports + primary status */}
+          <div className="grid grid-cols-3 gap-3 lg:hidden">
+            <div className="p-3 rounded-xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F]">
+              <div className="text-[11px] text-[#6B7C77] dark:text-[#94A7A1]">Indexed docs</div>
+              <div className="text-base font-bold text-[#172B28] dark:text-[#F2F7F5]">
+                {indexed ? documents.length : 0}
               </div>
-            )}
+            </div>
+            <div className="p-3 rounded-xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F]">
+              <div className="text-[11px] text-[#6B7C77] dark:text-[#94A7A1]">Passages</div>
+              <div className="text-base font-bold text-[#172B28] dark:text-[#F2F7F5]">
+                {passageCount}
+              </div>
+            </div>
+            <div className="p-3 rounded-xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F]">
+              <div className="text-[11px] text-[#6B7C77] dark:text-[#94A7A1]">Responses</div>
+              <div className="text-base font-bold text-[#172B28] dark:text-[#F2F7F5]">
+                {messages.filter((m) => m.role === "assistant").length}
+              </div>
+            </div>
           </div>
-        ) : (
-          /* Message Stream */
-          <div className="max-w-3xl mx-auto space-y-6">
-            {messages.map((msg) => (
-              <div key={msg.id} className="space-y-4">
-                {msg.role === "user" ? (
-                  /* User Prompt Card */
-                  <div className="p-5 rounded-2xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F] shadow-xs space-y-3">
-                    <h2 className="text-base font-semibold text-[#172B28] dark:text-[#F2F7F5]">
-                      {msg.content}
-                    </h2>
-                    {msg.selectedDocs && msg.selectedDocs.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-2 pt-1">
-                        {msg.selectedDocs.map((doc) => (
-                          <span
-                            key={doc}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#F6F8F7] dark:bg-[#1E3B33] text-[#4A5D57] dark:text-[#AFC1B9] border border-[#E5EBE8] dark:border-[#2A4C41]"
-                          >
-                            <FileText className="w-3 h-3 text-[#147D65] dark:text-[#4ADE80]" />
-                            {doc}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+
+          {renderStatusBanner()}
+
+          {/* Chat-save warning + retry */}
+          {chatSaveError && (
+            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{chatSaveError} Use Save chat now to retry before leaving.</span>
+              </div>
+              <button
+                type="button"
+                onClick={retrySaveChat}
+                disabled={blocked || isWorkspaceBusy}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-600 text-white font-medium text-[11px] hover:bg-amber-700 disabled:opacity-50"
+              >
+                <Save className="w-3 h-3" />
+                <span>Save chat now</span>
+              </button>
+            </div>
+          )}
+
+          {/* Error or notice alerts */}
+          {statusError && (
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-400 text-xs flex items-start justify-between gap-2">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{statusError}</span>
+              </div>
+              <button type="button" onClick={clearNotices} aria-label="Dismiss error">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {workspaceNotice && (
+            <div className="p-3 rounded-xl bg-[#EAF4EF] dark:bg-[#1A3831] border border-[#C8E2D5] dark:border-[#274F44] text-[#147D65] dark:text-[#4ADE80] text-xs flex items-start justify-between gap-2">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{workspaceNotice}</span>
+              </div>
+              <button type="button" onClick={clearNotices} aria-label="Dismiss notice">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* Local Page Preview (Zero AI Calls) */}
+          {previewPages.length > 0 && (
+            <div className="rounded-2xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F] shadow-xs overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setPreviewExpanded(!previewExpanded)}
+                className="w-full px-5 py-3.5 flex items-center justify-between text-left border-b border-[#E5EBE8] dark:border-[#22423B]"
+              >
+                <div>
+                  <div className="text-xs font-bold text-[#172B28] dark:text-[#F2F7F5]">
+                    Local page preview — not indexed ({previewPages.length} pages · {totalPages} total)
                   </div>
-                ) : (
-                  /* DocuMind Response Card */
-                  <div className="p-6 rounded-2xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F] shadow-xs space-y-5">
-                    {/* Header */}
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-md bg-[#147D65] flex items-center justify-center text-white">
-                        <FileText className="w-3.5 h-3.5" />
+                  <div className="text-[11px] text-[#6B7C77] dark:text-[#94A7A1] mt-0.5">
+                    Text is limited to 1,500 characters per page. Changing selected files clears this preview.
+                  </div>
+                </div>
+                {previewExpanded ? <ChevronUp className="w-4 h-4 text-[#6B7C77]" /> : <ChevronDown className="w-4 h-4 text-[#6B7C77]" />}
+              </button>
+
+              {previewExpanded && (
+                <div className="p-4 max-h-96 overflow-y-auto space-y-4">
+                  {previewPages.map((p) => (
+                    <div
+                      key={`${p.filename}-${p.page}`}
+                      className="p-3.5 rounded-xl bg-[#F6F8F7] dark:bg-[#122420] border border-[#E5EBE8] dark:border-[#25463D] space-y-1.5"
+                    >
+                      <div className="text-[11px] font-semibold text-[#147D65] dark:text-[#4ADE80]">
+                        {p.filename} · PDF page {p.page}
                       </div>
-                      <span className="text-xs font-bold text-[#172B28] dark:text-[#F2F7F5]">
-                        DocuMind
-                      </span>
-                      <span className="text-xs text-[#6B7C77] dark:text-[#94A7A1]">
-                        Grounded in your documents
-                      </span>
+                      <pre className="text-xs text-[#172B28] dark:text-[#E2EBE7] whitespace-pre-wrap font-sans leading-relaxed">
+                        {p.text}
+                      </pre>
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-                    {/* Summary intro */}
-                    <p className="text-sm font-medium text-[#172B28] dark:text-[#E2EBE7] leading-relaxed whitespace-pre-line">
-                      {msg.content}
-                    </p>
+          {/* Chat Controls (Clear / Download) */}
+          {messages.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={clearChatOnly}
+                  disabled={blocked}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E5EBE8] dark:border-[#26483F] bg-white dark:bg-[#162E29] hover:bg-[#F6F8F7] dark:hover:bg-[#1C3831] disabled:opacity-45 text-xs font-medium text-[#172B28] dark:text-[#F2F7F5]"
+                >
+                  <Eraser className="w-3.5 h-3.5" />
+                  <span>Clear chat only</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadChat}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E5EBE8] dark:border-[#26483F] bg-white dark:bg-[#162E29] hover:bg-[#F6F8F7] dark:hover:bg-[#1C3831] text-xs font-medium text-[#172B28] dark:text-[#F2F7F5]"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download chat and sources</span>
+                </button>
+              </div>
+              <span className="text-[11px] text-[#6B7C77] dark:text-[#94A7A1]">
+                Clear chat keeps documents indexed.
+              </span>
+            </div>
+          )}
 
-                    {/* Structured Key Points */}
-                    {msg.points && msg.points.length > 0 && (
-                      <div className="space-y-4 pt-1">
+          {/* Empty State Hero vs Conversation Messages */}
+          {messages.length === 0 ? (
+            <div className="py-12 flex flex-col items-center text-center space-y-4">
+              <div className="w-11 h-11 rounded-xl bg-[#147D65] flex items-center justify-center text-white shadow-sm">
+                <FileText className="w-5 h-5" />
+              </div>
+              <h2 className="text-2xl font-semibold tracking-tight text-[#172B28] dark:text-[#F2F7F5]">
+                Ask your documents. Inspect the supporting pages.
+              </h2>
+              <p className="text-xs text-[#6B7C77] dark:text-[#94A7A1] max-w-md leading-relaxed">
+                References use physical PDF page numbers starting at 1. Check the cited text before relying on an answer.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {messages.map((msg) => (
+                <div key={msg.id}>
+                  {msg.role === "user" ? (
+                    <div className="p-4 rounded-2xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F] shadow-xs">
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-[#6B7C77] dark:text-[#94A7A1] mb-1">
+                        You
+                      </div>
+                      <p className="text-sm font-medium text-[#172B28] dark:text-[#F2F7F5] whitespace-pre-wrap">
+                        {msg.content}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-5 rounded-2xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F] shadow-xs space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-md bg-[#147D65] flex items-center justify-center text-white">
+                            <FileText className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-xs font-bold text-[#172B28] dark:text-[#F2F7F5]">
+                            DocMind
+                          </span>
+                          <span className="text-xs text-[#6B7C77] dark:text-[#94A7A1]">
+                            Grounded answer
+                          </span>
+                        </div>
+                        {msg.latency && (
+                          <span className="text-[11px] text-[#6B7C77] dark:text-[#94A7A1]">
+                            {msg.latency}
+                          </span>
+                        )}
+                      </div>
+
+                      {msg.status === "conflict" && (
+                        <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2 font-medium">
+                          <AlertTriangle className="w-4 h-4 shrink-0" />
+                          <span>The documents contain conflicting information. Compare cited sources carefully.</span>
+                        </div>
+                      )}
+
+                      {msg.claims && msg.claims.length > 0 ? (
                         <div className="space-y-3">
-                          {msg.points.map((pt) => (
-                            <div key={pt.num} className="text-xs space-y-1">
-                              <span className="font-bold text-[#147D65] dark:text-[#4ADE80] mr-2">
-                                {pt.num}
-                              </span>
-                              <span className="font-semibold text-[#172B28] dark:text-[#F2F7F5] mr-1.5">
-                                {pt.title}
-                              </span>
-                              <span className="text-[#4A5D57] dark:text-[#AFC1B9] leading-relaxed">
-                                {pt.body}
-                              </span>
-                              {pt.citationId && (
-                                <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#EAF4EF] dark:bg-[#1A3831] text-[#147D65] dark:text-[#4ADE80]">
-                                  [{pt.citationId}]
+                          {msg.claims.map((claim, cIdx) => (
+                            <div key={cIdx} className="text-sm text-[#172B28] dark:text-[#E2EBE7] leading-relaxed">
+                              <span>{claim.text}</span>
+                              {claim.refs.length > 0 && (
+                                <span className="inline-flex flex-wrap gap-1.5 ml-2 align-middle">
+                                  {claim.refs.map((ref, rIdx) => (
+                                    <button
+                                      key={rIdx}
+                                      type="button"
+                                      onClick={() => {
+                                        if (!msg.sources) return;
+                                        const matchIdx = msg.sources.findIndex(
+                                          (s) => s.filename === ref.filename && s.page === ref.page
+                                        );
+                                        openEvidence(msg.sources, matchIdx >= 0 ? matchIdx : 0);
+                                      }}
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#EAF4EF] dark:bg-[#1C3E36] text-[#147D65] dark:text-[#4ADE80] border border-[#C8E2D5] dark:border-[#2A5247] hover:bg-[#D8EBE1]"
+                                    >
+                                      {ref.filename} · p. {ref.page}
+                                    </button>
+                                  ))}
                                 </span>
                               )}
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )}
+                      ) : (
+                        <p className="text-sm text-[#172B28] dark:text-[#E2EBE7] leading-relaxed whitespace-pre-wrap">
+                          {msg.content}
+                        </p>
+                      )}
 
-                    {/* Bottom Citation Pills */}
-                    {msg.citations && msg.citations.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-2 pt-2">
-                        {msg.citations.map((cite) => (
-                          <button
-                            key={cite.id}
-                            onClick={() => handleCitationClick(cite)}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#EAF4EF] dark:bg-[#1C3E36] text-[#147D65] dark:text-[#4ADE80] border border-[#C8E2D5] dark:border-[#2A5247] hover:bg-[#D9EFE3] transition-colors"
-                          >
-                            <FileText className="w-3 h-3" />
-                            <span>{cite.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                      {/* Deduplicated Citation Pills */}
+                      {msg.sources && msg.sources.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#E5EBE8] dark:border-[#22423B]">
+                          {msg.sources.map((src, sIdx) => (
+                            <button
+                              key={`${src.filename}-${src.page}-${sIdx}`}
+                              type="button"
+                              onClick={() => openEvidence(msg.sources || [], sIdx)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-[#EAF4EF] dark:bg-[#1C3E36] text-[#147D65] dark:text-[#4ADE80] border border-[#C8E2D5] dark:border-[#2A5247] hover:bg-[#D8EBE1] transition-colors"
+                            >
+                              <FileText className="w-3 h-3" />
+                              <span>
+                                {src.filename} · Page {src.page}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
-                    {/* Bottom action row */}
-                    <div className="flex items-center justify-between pt-3 border-t border-[#E5EBE8] dark:border-[#22423B] text-xs text-[#6B7C77] dark:text-[#94A7A1]">
-                      <div className="flex items-center gap-3">
+                      {/* Copy footer */}
+                      <div className="flex items-center justify-between pt-1 text-xs text-[#6B7C77] dark:text-[#94A7A1]">
                         <button
+                          type="button"
                           onClick={() => handleCopy(msg.id, msg.content)}
-                          className="flex items-center gap-1 hover:text-[#172B28] dark:hover:text-white transition-colors"
+                          className="inline-flex items-center gap-1 hover:text-[#172B28] dark:hover:text-white transition-colors"
                         >
                           {copiedId === msg.id ? (
-                            <Check className="w-3.5 h-3.5 text-green-600" />
+                            <Check className="w-3.5 h-3.5 text-[#147D65] dark:text-[#4ADE80]" />
                           ) : (
                             <Copy className="w-3.5 h-3.5" />
                           )}
                           <span>{copiedId === msg.id ? "Copied" : "Copy"}</span>
                         </button>
-                        <button
-                          onClick={() => sendMessage(msg.content)}
-                          className="flex items-center gap-1 hover:text-[#172B28] dark:hover:text-white transition-colors"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5" />
-                          <span>Regenerate</span>
-                        </button>
-                        <button className="hover:text-[#172B28] dark:hover:text-white transition-colors">
-                          <ThumbsUp className="w-3.5 h-3.5" />
-                        </button>
-                        <button className="hover:text-[#172B28] dark:hover:text-white transition-colors">
-                          <ThumbsDown className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
 
-                      <div>
-                        {msg.groundingSources || 0} sources • {msg.latency || "0.8s"}
+                        {msg.sources && msg.sources.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => openEvidence(msg.sources || [], 0)}
+                            className="text-xs font-medium text-[#147D65] dark:text-[#4ADE80] hover:underline"
+                          >
+                            View supporting passages ({msg.sources.length})
+                          </button>
+                        )}
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                  )}
+                </div>
+              ))}
+
+              {isAsking && (
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F] text-xs text-[#5C7069] dark:text-[#9FB1AA] animate-pulse">
+                  Finding supporting passages…
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Bottom Sticky Input Container */}
-      <div className="px-6 lg:px-16 pb-6 pt-2 bg-[#F6F8F7] dark:bg-[#10221F]">
+      {/* Bottom Sticky Chat Input */}
+      <div className="px-4 sm:px-8 lg:px-12 pb-5 pt-2 bg-[#F6F8F7] dark:bg-[#10221F] border-t border-[#E5EBE8] dark:border-[#22423B]">
         <div className="max-w-3xl mx-auto">
-          {/* Main Input Box */}
           <form
             onSubmit={handleSubmit}
-            className="rounded-2xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F] shadow-sm p-3 focus-within:ring-2 focus-within:ring-[#147D65] dark:focus-within:ring-[#4ADE80] transition-all"
+            className="rounded-2xl bg-white dark:bg-[#162E29] border border-[#E5EBE8] dark:border-[#26483F] shadow-xs p-3 focus-within:ring-2 focus-within:ring-[#147D65] dark:focus-within:ring-[#4ADE80] transition-all flex items-end gap-2"
           >
             <textarea
               value={input}
+              disabled={!chatEnabled || isAsking}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
@@ -304,48 +411,28 @@ export function ChatArea() {
                 }
               }}
               rows={2}
+              maxLength={2000}
               placeholder={
-                documents.length > 0
-                  ? "Ask anything about your documents..."
-                  : "Attach a PDF or ask general document queries..."
+                chatEnabled
+                  ? "Ask about your indexed PDFs"
+                  : !indexed
+                  ? "Index PDFs in the sidebar to enable chat"
+                  : !consent
+                  ? "Enable processing consent in the sidebar to ask questions"
+                  : "Reset session before continuing"
               }
-              className="w-full bg-transparent resize-none border-0 text-sm text-[#172B28] dark:text-[#F2F7F5] placeholder-[#8A9C96] focus:outline-hidden px-1"
+              className="flex-1 bg-transparent resize-none border-0 text-sm text-[#172B28] dark:text-[#F2F7F5] placeholder-[#8A9C96] focus:outline-hidden px-1 disabled:opacity-50"
             />
 
-            <div className="flex items-center justify-between pt-2 border-t border-[#F1F5F3] dark:border-[#1E3B33]">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={(e) => handleFiles(e.target.files)}
-                multiple
-                accept=".pdf,.docx,.txt"
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#4A5D57] dark:text-[#AFC1B9] hover:bg-[#F6F8F7] dark:hover:bg-[#1E3B33] transition-colors"
-              >
-                <Paperclip className="w-3.5 h-3.5" />
-                <span>{isUploading ? "Indexing into Chroma..." : "+ Attach documents"}</span>
-              </button>
-
-              <button
-                type="submit"
-                disabled={!input.trim()}
-                className="w-8 h-8 rounded-lg bg-[#147D65] hover:bg-[#0E634F] disabled:opacity-40 text-white flex items-center justify-center transition-colors shadow-xs"
-              >
-                <ArrowUp className="w-4 h-4 stroke-[2.5]" />
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={!chatEnabled || isAsking || !input.trim()}
+              aria-label="Send question"
+              className="w-8 h-8 rounded-lg bg-[#147D65] hover:bg-[#0E634F] disabled:opacity-40 text-white flex items-center justify-center transition-colors shrink-0"
+            >
+              <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+            </button>
           </form>
-
-          {/* Bottom Grounding Subtext */}
-          <div className="flex items-center justify-center gap-2 mt-2 text-[11px] text-[#8A9C96] dark:text-[#738C84]">
-            <Sparkles className="w-3 h-3 text-[#147D65] dark:text-[#4ADE80]" />
-            <span>Answers grounded in your sources. Always verify important information.</span>
-          </div>
         </div>
       </div>
     </div>

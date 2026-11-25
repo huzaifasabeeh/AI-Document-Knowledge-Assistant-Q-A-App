@@ -1,136 +1,619 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import {
-  DocumentItem,
-  CollectionItem,
   ChatMessage,
-  SourceEvidenceState,
-  InlineCitation,
+  PreviewPage,
+  SavedWorkspaceSummary,
+  SourcePassage,
+  UploadedDocMeta,
 } from "./types";
-import { askChat, uploadDocuments } from "./api";
+import {
+  ApiError,
+  askQuestion,
+  clearSessionChat,
+  deleteWorkspace,
+  exportChatConversation,
+  getSessionState,
+  indexDocuments,
+  listWorkspaces,
+  loadWorkspace,
+  previewDocuments,
+  resetSession,
+  saveWorkspaceChat,
+  saveWorkspaceFromFiles,
+  saveWorkspaceFromSession,
+} from "./api";
+import { useAuth } from "./auth-context";
 
-interface DocContextType {
-  documents: DocumentItem[];
-  collections: CollectionItem[];
-  messages: ChatMessage[];
-  selectedDocNames: string[];
-  activeEvidence: SourceEvidenceState | null;
-  isEvidenceOpen: boolean;
-  isUploading: boolean;
-  sessionId: string;
-  uploadQueue: { name: string; size: string; pages: number; progress: number; status: string }[];
-  storageUsedMb: number;
-  toggleSelectDoc: (name: string) => void;
-  clearSelectedDocs: () => void;
-  openEvidence: (evidence: Partial<SourceEvidenceState>) => void;
-  closeEvidence: () => void;
-  sendMessage: (text: string) => Promise<void>;
-  startNewChat: () => void;
-  uploadRealFiles: (files: File[], collectionName?: string) => Promise<void>;
-  createCollection: (name: string, description: string) => void;
+const SESSION_ID_KEY = "docmind_active_session_id";
+const CONSENT_KEY = "docmind_consent_identity";
+
+async function computeSelectionSignature(files: File[]): Promise<string> {
+  const parts: string[] = [];
+  for (const f of files) {
+    const buf = await f.arrayBuffer();
+    const digest = await crypto.subtle.digest("SHA-256", buf);
+    const hex = Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    parts.push(`${f.name}:${hex}`);
+  }
+  return parts.join("|");
 }
 
-const defaultCollections: CollectionItem[] = [
-  {
-    id: "col-default-1",
-    name: "General",
-    description: "Main collection for uploaded business reports, policies and notes.",
-    docCount: 0,
-    indexedCount: 0,
-    statusText: "0 indexed",
-    isPrivate: true,
-  },
-  {
-    id: "col-default-2",
-    name: "Research",
-    description: "Market intelligence, customer research and strategic findings.",
-    docCount: 0,
-    indexedCount: 0,
-    statusText: "0 indexed",
-    isPrivate: true,
-  },
-];
+function normalizeServerMessages(
+  rows: {
+    role: "user" | "assistant";
+    content: string;
+    status?: "answered" | "conflict" | "not_found";
+    claims?: { text: string; refs: { filename: string; page: number }[] }[];
+    sources?: SourcePassage[];
+    latency?: string;
+  }[]
+): ChatMessage[] {
+  return rows.map((m, idx) => ({
+    id: `msg-restored-${idx}-${Date.now()}`,
+    role: m.role,
+    content: m.content,
+    status: m.status,
+    claims: m.claims,
+    sources: m.sources,
+    latency: m.latency,
+  }));
+}
+
+interface DocContextType {
+  selectedFiles: File[];
+  documents: UploadedDocMeta[];
+  totalPages: number;
+  passageCount: number;
+  previewPages: PreviewPage[];
+  messages: ChatMessage[];
+  consent: boolean;
+  sessionId: string | null;
+  indexed: boolean;
+  providerChanged: boolean;
+  cleanupBlocked: boolean;
+  savedWorkspaceId: string | null;
+  workspaces: SavedWorkspaceSummary[];
+  chatSaveError: string | null;
+  workspaceNotice: string | null;
+  statusError: string | null;
+  isPreviewing: boolean;
+  isIndexing: boolean;
+  isAsking: boolean;
+  isResetting: boolean;
+  isWorkspaceBusy: boolean;
+  activeSources: SourcePassage[];
+  activeSourceIndex: number;
+  isEvidenceOpen: boolean;
+
+  setConsent: (checked: boolean) => void;
+  selectFiles: (files: File[]) => Promise<void>;
+  runPreview: () => Promise<void>;
+  runIndex: () => Promise<void>;
+  sendQuestion: (question: string) => Promise<void>;
+  clearChatOnly: () => Promise<void>;
+  downloadChat: () => Promise<void>;
+  resetWorkspace: () => Promise<void>;
+  refreshWorkspaces: () => Promise<void>;
+  saveNewWorkspace: (title: string) => Promise<void>;
+  openSavedWorkspace: (workspaceId: string) => Promise<void>;
+  retrySaveChat: () => Promise<void>;
+  deleteSavedWorkspace: (workspaceId: string) => Promise<void>;
+  openEvidence: (sources: SourcePassage[], index?: number) => void;
+  closeEvidence: () => void;
+  clearNotices: () => void;
+}
 
 const DocContext = createContext<DocContextType | undefined>(undefined);
 
 export function DocProvider({ children }: { children: React.ReactNode }) {
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [collections, setCollections] = useState<CollectionItem[]>(defaultCollections);
+  const { user } = useAuth();
+  return <DocProviderInner key={user?.id || "anon"}>{children}</DocProviderInner>;
+}
+
+function DocProviderInner({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, token, health, refreshHealth, invalidateSession } = useAuth();
+
+  const currentIdentity = health?.ai?.identity ?? null;
+  const currentIdentityKey = currentIdentity ? currentIdentity.join("|") : "";
+
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectionSignature, setSelectionSignature] = useState<string>("");
+  const [documents, setDocuments] = useState<UploadedDocMeta[]>([]);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [passageCount, setPassageCount] = useState<number>(0);
+  const [previewPages, setPreviewPages] = useState<PreviewPage[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [selectedDocNames, setSelectedDocNames] = useState<string[]>([]);
-  const [sessionId, setSessionId] = useState<string>("");
-  const [activeEvidence, setActiveEvidence] = useState<SourceEvidenceState | null>(null);
-  const [isEvidenceOpen, setIsEvidenceOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadQueue, setUploadQueue] = useState<
-    { name: string; size: string; pages: number; progress: number; status: string }[]
-  >([]);
+  const [consent, setConsentState] = useState<boolean>(() => {
+    if (typeof window === "undefined" || !currentIdentityKey) return false;
+    return sessionStorage.getItem(CONSENT_KEY) === currentIdentityKey;
+  });
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [indexed, setIndexed] = useState<boolean>(false);
+  const [indexedProviderIdentity, setIndexedProviderIdentity] = useState<string[] | null>(null);
+  const [cleanupBlocked, setCleanupBlocked] = useState<boolean>(false);
+  const [savedWorkspaceId, setSavedWorkspaceId] = useState<string | null>(null);
+  const [workspaces, setWorkspaces] = useState<SavedWorkspaceSummary[]>([]);
 
-  // Load user data from localStorage on mount
-  useEffect(() => {
-    const savedDocs = localStorage.getItem("docmind_documents");
-    const savedMsgs = localStorage.getItem("docmind_messages");
-    const savedCols = localStorage.getItem("docmind_collections");
-    const savedSession = localStorage.getItem("docmind_session_id");
+  const [chatSaveError, setChatSaveError] = useState<string | null>(null);
+  const [workspaceNotice, setWorkspaceNotice] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
-    if (savedDocs) {
-      try {
-        const parsed = JSON.parse(savedDocs);
-        setDocuments(parsed);
-        setSelectedDocNames(parsed.map((d: DocumentItem) => d.name));
-      } catch {
-        // ignore
-      }
-    }
-    if (savedMsgs) {
-      try {
-        setMessages(JSON.parse(savedMsgs));
-      } catch {
-        // ignore
-      }
-    }
-    if (savedCols) {
-      try {
-        setCollections(JSON.parse(savedCols));
-      } catch {
-        // ignore
-      }
-    }
-    if (savedSession) {
-      setSessionId(savedSession);
+  const [isPreviewing, setIsPreviewing] = useState<boolean>(false);
+  const [isIndexing, setIsIndexing] = useState<boolean>(false);
+  const [isAsking, setIsAsking] = useState<boolean>(false);
+  const [isResetting, setIsResetting] = useState<boolean>(false);
+  const [isWorkspaceBusy, setIsWorkspaceBusy] = useState<boolean>(false);
+
+  const [activeSources, setActiveSources] = useState<SourcePassage[]>([]);
+  const [activeSourceIndex, setActiveSourceIndex] = useState<number>(0);
+  const [isEvidenceOpen, setIsEvidenceOpen] = useState<boolean>(false);
+
+  const providerChanged = Boolean(
+    indexed &&
+      indexedProviderIdentity &&
+      currentIdentity &&
+      indexedProviderIdentity.join("|") !== currentIdentityKey
+  );
+
+  const clearLocalWorkspaceState = useCallback(() => {
+    setSelectedFiles([]);
+    setSelectionSignature("");
+    setDocuments([]);
+    setTotalPages(0);
+    setPassageCount(0);
+    setPreviewPages([]);
+    setMessages([]);
+    setConsentState(false);
+    setSessionId(null);
+    setIndexed(false);
+    setIndexedProviderIdentity(null);
+    setCleanupBlocked(false);
+    setSavedWorkspaceId(null);
+    setChatSaveError(null);
+    setWorkspaceNotice(null);
+    setStatusError(null);
+    setActiveSources([]);
+    setActiveSourceIndex(0);
+    setIsEvidenceOpen(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(SESSION_ID_KEY);
+      sessionStorage.removeItem(CONSENT_KEY);
     }
   }, []);
 
-  // Compute total storage dynamically
-  const storageUsedMb = documents.reduce((acc, doc) => {
-    const num = parseFloat(doc.size) || 0;
-    if (doc.size.includes("KB")) return acc + num / 1024;
-    return acc + num;
-  }, 0);
+  // Restore same-tab server session if present on F5 refresh (zero synchronous setState before await)
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      return;
+    }
 
-  const toggleSelectDoc = (name: string) => {
-    setSelectedDocNames((prev) =>
-      prev.includes(name) ? prev.filter((d) => d !== name) : [...prev, name]
-    );
+    let cancelled = false;
+    async function restoreFromSessionStorage() {
+      const savedSid =
+        typeof window !== "undefined" ? sessionStorage.getItem(SESSION_ID_KEY) : null;
+      if (!savedSid || !token) return;
+      try {
+        const sess = await getSessionState(token, savedSid);
+        if (cancelled) return;
+        setSessionId(sess.session_id);
+        setDocuments(sess.documents);
+        setTotalPages(sess.total_pages);
+        setPassageCount(sess.passage_count);
+        setIndexed(sess.indexed);
+        setCleanupBlocked(sess.cleanup_blocked);
+        setIndexedProviderIdentity(sess.provider_identity);
+        setSavedWorkspaceId(sess.saved_workspace_id);
+        const restoredMsgs = normalizeServerMessages(sess.messages || []);
+        setMessages(restoredMsgs);
+        const lastWithSources = [...restoredMsgs].reverse().find((m) => m.sources && m.sources.length > 0);
+        if (lastWithSources?.sources) {
+          setActiveSources(lastWithSources.sources);
+          setActiveSourceIndex(0);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        if (err instanceof ApiError && err.status === 401) {
+          invalidateSession(err.message);
+          return;
+        }
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem(SESSION_ID_KEY);
+        }
+      }
+    }
+
+    restoreFromSessionStorage();
+    return () => {
+      cancelled = true;
+    };
+  }, [invalidateSession, isAuthenticated, token]);
+
+  const handleApiError = useCallback(
+    (err: unknown, fallback: string) => {
+      if (err instanceof ApiError && err.status === 401) {
+        invalidateSession(err.message);
+        return;
+      }
+      const message = err instanceof Error ? err.message : fallback;
+      if (message.toLowerCase().includes("cleanup failed") || message.toLowerCase().includes("session paused")) {
+        setCleanupBlocked(true);
+      }
+      setStatusError(message);
+    },
+    [invalidateSession]
+  );
+
+  const setConsent = (checked: boolean) => {
+    setConsentState(checked);
+    if (typeof window !== "undefined") {
+      if (checked && currentIdentityKey) {
+        sessionStorage.setItem(CONSENT_KEY, currentIdentityKey);
+      } else {
+        sessionStorage.removeItem(CONSENT_KEY);
+      }
+    }
   };
 
-  const clearSelectedDocs = () => {
-    setSelectedDocNames([]);
+  const selectFiles = async (files: File[]) => {
+    setStatusError(null);
+    if (indexed || cleanupBlocked || providerChanged || savedWorkspaceId) {
+      setStatusError("Reset before changing this workspace's document set.");
+      return;
+    }
+
+    if (files.length === 0) {
+      setSelectedFiles([]);
+      setSelectionSignature("");
+      setPreviewPages([]);
+      setDocuments([]);
+      setTotalPages(0);
+      return;
+    }
+
+    // Immediate client-side feedback mirroring core.py limits
+    if (files.length > 10) {
+      setStatusError("Select between 1 and 10 PDFs.");
+      return;
+    }
+    const seenNames = new Set<string>();
+    for (const file of files) {
+      const cleanName = file.name.replace(/\\/g, "/").split("/").pop() || file.name;
+      if (seenNames.has(cleanName)) {
+        setStatusError("Use distinct filenames for each PDF.");
+        return;
+      }
+      seenNames.add(cleanName);
+      if (!cleanName.toLowerCase().endsWith(".pdf")) {
+        setStatusError("Only PDF files are supported.");
+        return;
+      }
+      if (file.size === 0 || file.size > 10 * 1024 * 1024) {
+        setStatusError("Each PDF must be nonempty and at most 10 MB.");
+        return;
+      }
+    }
+
+    const nextSig = await computeSelectionSignature(files);
+    if (nextSig !== selectionSignature) {
+      setPreviewPages([]);
+      setSelectionSignature(nextSig);
+      setDocuments(
+        files.map((f) => ({
+          name: f.name.replace(/\\/g, "/").split("/").pop() || f.name,
+          size_bytes: f.size,
+          pages: 0,
+        }))
+      );
+      setTotalPages(0);
+    }
+    setSelectedFiles(files);
   };
 
-  const openEvidence = (evidence: Partial<SourceEvidenceState>) => {
-    setActiveEvidence((prev) => ({
-      isOpen: true,
-      docTitle: evidence.docTitle || prev?.docTitle || "Document",
-      docType: evidence.docType || prev?.docType || "PDF Document",
-      page: evidence.page || prev?.page || 1,
-      totalPages: evidence.totalPages || prev?.totalPages || 1,
-      heading: evidence.heading || prev?.heading || "Cited Source Passage",
-      fullText: evidence.fullText || prev?.fullText || "",
-      highlightSnippet: evidence.highlightSnippet || prev?.highlightSnippet || "",
-      relatedPassages: evidence.relatedPassages || prev?.relatedPassages || [],
-    }));
+  const runPreview = async () => {
+    if (!token || selectedFiles.length === 0 || indexed || cleanupBlocked || providerChanged) {
+      return;
+    }
+    setIsPreviewing(true);
+    setStatusError(null);
+    setPreviewPages([]);
+    try {
+      const res = await previewDocuments(token, selectedFiles);
+      setPreviewPages(res.pages);
+      setDocuments(res.documents);
+      setTotalPages(res.total_pages);
+    } catch (err) {
+      handleApiError(err, "Could not preview PDF pages.");
+    } finally {
+      setIsPreviewing(false);
+    }
+  };
+
+  const runIndex = async () => {
+    if (!token || !consent || indexed || cleanupBlocked || providerChanged) return;
+    if (selectedFiles.length === 0 && !sessionId) return;
+
+    setIsIndexing(true);
+    setStatusError(null);
+    try {
+      const res = await indexDocuments(token, {
+        consent,
+        files: sessionId ? undefined : selectedFiles,
+        sessionId: sessionId || undefined,
+      });
+      setSessionId(res.session_id);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(SESSION_ID_KEY, res.session_id);
+      }
+      setDocuments(res.documents);
+      setTotalPages(res.total_pages);
+      setPassageCount(res.passage_count);
+      setIndexed(true);
+      setIndexedProviderIdentity(res.provider_identity);
+      setPreviewPages([]);
+      if (res.saved_workspace_id) {
+        setSavedWorkspaceId(res.saved_workspace_id);
+      }
+      await refreshHealth();
+    } catch (err) {
+      handleApiError(err, "Document indexing failed.");
+    } finally {
+      setIsIndexing(false);
+    }
+  };
+
+  const persistMessagesIfSaved = useCallback(
+    async (targetMessages: ChatMessage[]) => {
+      if (!token || !savedWorkspaceId) return;
+      try {
+        await saveWorkspaceChat(token, savedWorkspaceId, targetMessages);
+        setChatSaveError(null);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) {
+          invalidateSession(err.message);
+          return;
+        }
+        const msg = err instanceof Error ? err.message : "Could not save chat to saved workspace.";
+        setChatSaveError(msg);
+      }
+    },
+    [invalidateSession, savedWorkspaceId, token]
+  );
+
+  const sendQuestion = async (question: string) => {
+    const trimmed = question.trim();
+    if (!token || !sessionId || !indexed || !consent || cleanupBlocked || providerChanged || !trimmed) {
+      return;
+    }
+
+    setIsAsking(true);
+    setStatusError(null);
+    const historyPayload = messages.map((m) => ({ role: m.role, content: m.content }));
+
+    try {
+      const res = await askQuestion(token, {
+        session_id: sessionId,
+        question: trimmed,
+        history: historyPayload,
+        consent,
+      });
+
+      const userMsg: ChatMessage = {
+        id: `msg-u-${Date.now()}`,
+        role: "user",
+        content: trimmed,
+      };
+      const assistantMsg: ChatMessage = {
+        id: `msg-a-${Date.now() + 1}`,
+        role: "assistant",
+        content: res.content,
+        status: res.status,
+        claims: res.claims,
+        sources: res.sources,
+        latency: res.latency,
+      };
+
+      const nextMessages = [...messages, userMsg, assistantMsg];
+      setMessages(nextMessages);
+      if (res.sources && res.sources.length > 0) {
+        setActiveSources(res.sources);
+        setActiveSourceIndex(0);
+        setIsEvidenceOpen(true);
+      }
+      await persistMessagesIfSaved(nextMessages);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        await refreshHealth();
+      } else if (err instanceof ApiError && err.status === 404) {
+        setIndexed(false);
+        setSessionId(null);
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem(SESSION_ID_KEY);
+        }
+      }
+      handleApiError(err, "Question could not be answered.");
+    } finally {
+      setIsAsking(false);
+    }
+  };
+
+  const clearChatOnly = async () => {
+    if (!token || cleanupBlocked || providerChanged) return;
+    setStatusError(null);
+    if (sessionId) {
+      try {
+        await clearSessionChat(token, sessionId);
+      } catch (err) {
+        handleApiError(err, "Could not clear session chat.");
+        return;
+      }
+    }
+    setMessages([]);
+    setActiveSources([]);
+    setIsEvidenceOpen(false);
+    await persistMessagesIfSaved([]);
+  };
+
+  const downloadChat = async () => {
+    if (!token || messages.length === 0) return;
+    setStatusError(null);
+    try {
+      const res = await exportChatConversation(token, messages);
+      const blob = new Blob([res.content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = res.filename || "document-chat.txt";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      handleApiError(err, "Could not export chat.");
+    }
+  };
+
+  const resetWorkspace = async () => {
+    if (!token) {
+      clearLocalWorkspaceState();
+      return;
+    }
+    setIsResetting(true);
+    setStatusError(null);
+    try {
+      if (sessionId) {
+        await resetSession(token, sessionId);
+      }
+      clearLocalWorkspaceState();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        clearLocalWorkspaceState();
+      } else {
+        handleApiError(err, "Cleanup failed. Retry reset or restart the server before continuing.");
+      }
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const refreshWorkspaces = useCallback(async () => {
+    if (!token) return;
+    setIsWorkspaceBusy(true);
+    setStatusError(null);
+    try {
+      const res = await listWorkspaces(token);
+      setWorkspaces(res.workspaces);
+    } catch (err) {
+      handleApiError(err, "Could not load saved workspaces.");
+    } finally {
+      setIsWorkspaceBusy(false);
+    }
+  }, [handleApiError, token]);
+
+  const saveNewWorkspace = async (title: string) => {
+    if (!token || cleanupBlocked || providerChanged) return;
+    if (!sessionId && selectedFiles.length === 0) {
+      setStatusError("Select PDF files before saving a workspace.");
+      return;
+    }
+    setIsWorkspaceBusy(true);
+    setStatusError(null);
+    setWorkspaceNotice(null);
+    try {
+      if (sessionId) {
+        const res = await saveWorkspaceFromSession(token, sessionId, title, messages);
+        setSavedWorkspaceId(res.workspace_id);
+      } else {
+        const res = await saveWorkspaceFromFiles(token, title, selectedFiles, messages);
+        setSessionId(res.session_id);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(SESSION_ID_KEY, res.session_id);
+        }
+        setSavedWorkspaceId(res.workspace_id);
+        setDocuments(res.documents);
+        setTotalPages(res.total_pages);
+        // Bind uploader to the saved workspace's exact document set
+        setSelectedFiles([]);
+      }
+      setChatSaveError(null);
+      setWorkspaceNotice("Workspace saved to your account.");
+      await refreshWorkspaces();
+    } catch (err) {
+      handleApiError(err, "Failed to save workspace.");
+    } finally {
+      setIsWorkspaceBusy(false);
+    }
+  };
+
+  const openSavedWorkspace = async (workspaceId: string) => {
+    if (!token || indexed || cleanupBlocked || providerChanged || selectedFiles.length > 0 || messages.length > 0 || savedWorkspaceId) {
+      return;
+    }
+    setIsWorkspaceBusy(true);
+    setStatusError(null);
+    setWorkspaceNotice(null);
+    try {
+      const res = await loadWorkspace(token, workspaceId);
+      setSessionId(res.session_id);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(SESSION_ID_KEY, res.session_id);
+      }
+      setSavedWorkspaceId(res.workspace_id);
+      setDocuments(res.documents);
+      setTotalPages(res.total_pages);
+      setIndexed(false);
+      setPassageCount(0);
+      setPreviewPages([]);
+      const restoredMsgs = normalizeServerMessages(res.messages);
+      setMessages(restoredMsgs);
+      const lastWithSources = [...restoredMsgs].reverse().find((m) => m.sources && m.sources.length > 0);
+      if (lastWithSources?.sources) {
+        setActiveSources(lastWithSources.sources);
+        setActiveSourceIndex(0);
+      }
+      setWorkspaceNotice("Saved workspace opened. Re-index its PDFs with consent to ask new questions.");
+    } catch (err) {
+      handleApiError(err, "Could not open saved workspace.");
+    } finally {
+      setIsWorkspaceBusy(false);
+    }
+  };
+
+  const retrySaveChat = async () => {
+    if (!savedWorkspaceId) return;
+    setIsWorkspaceBusy(true);
+    await persistMessagesIfSaved(messages);
+    setIsWorkspaceBusy(false);
+  };
+
+  const deleteSavedWorkspace = async (workspaceId: string) => {
+    if (!token || cleanupBlocked || providerChanged) return;
+    setIsWorkspaceBusy(true);
+    setStatusError(null);
+    try {
+      await deleteWorkspace(token, workspaceId);
+      if (savedWorkspaceId === workspaceId) {
+        setSavedWorkspaceId(null);
+        setChatSaveError(null);
+      }
+      setWorkspaceNotice("Saved copy deleted. Any open session or downloaded copy remains until cleared.");
+      await refreshWorkspaces();
+    } catch (err) {
+      handleApiError(
+        err,
+        "Deletion could not be confirmed. Refresh the list and retry; a deleting item cannot be reopened."
+      );
+    } finally {
+      setIsWorkspaceBusy(false);
+    }
+  };
+
+  const openEvidence = (sources: SourcePassage[], index = 0) => {
+    setActiveSources(sources);
+    setActiveSourceIndex(index);
     setIsEvidenceOpen(true);
   };
 
@@ -138,199 +621,54 @@ export function DocProvider({ children }: { children: React.ReactNode }) {
     setIsEvidenceOpen(false);
   };
 
-  const startNewChat = () => {
-    setMessages([]);
-    localStorage.removeItem("docmind_messages");
-  };
-
-  const uploadRealFiles = async (files: File[], collectionName: string = "General") => {
-    if (!files || files.length === 0) return;
-    setIsUploading(true);
-
-    // Initial queue state
-    const newQueueItems = files.map((f) => ({
-      name: f.name,
-      size: `${(f.size / (1024 * 1024)).toFixed(1)} MB`,
-      pages: 1,
-      progress: 40,
-      status: "Extracting & Indexing...",
-    }));
-    setUploadQueue((prev) => [...newQueueItems, ...prev]);
-
-    try {
-      const res = await uploadDocuments(files);
-      if (res.session_id) {
-        setSessionId(res.session_id);
-        localStorage.setItem("docmind_session_id", res.session_id);
-      }
-
-      const newDocs: DocumentItem[] = files.map((f) => {
-        const sizeMb = (f.size / (1024 * 1024)).toFixed(1);
-        return {
-          id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          name: f.name,
-          type: f.name.endsWith(".pdf") ? "pdf" : f.name.endsWith(".docx") ? "docx" : "txt",
-          pages: 1,
-          size: `${sizeMb} MB`,
-          collection: collectionName,
-          status: "ready",
-          addedAt: "Just now",
-        };
-      });
-
-      setDocuments((prev) => {
-        const updated = [...newDocs, ...prev];
-        localStorage.setItem("docmind_documents", JSON.stringify(updated));
-        return updated;
-      });
-
-      setSelectedDocNames((prev) => [...prev, ...files.map((f) => f.name)]);
-
-      // Update collection counts
-      setCollections((prev) => {
-        const updated = prev.map((col) => {
-          if (col.name === collectionName) {
-            const count = col.docCount + files.length;
-            return {
-              ...col,
-              docCount: count,
-              indexedCount: count,
-              statusText: `${count} indexed`,
-            };
-          }
-          return col;
-        });
-        localStorage.setItem("docmind_collections", JSON.stringify(updated));
-        return updated;
-      });
-
-      setUploadQueue((prev) =>
-        prev.map((item) =>
-          files.some((f) => f.name === item.name)
-            ? { ...item, progress: 100, status: "Ready to ask" }
-            : item
-        )
-      );
-    } catch (err) {
-      console.error("Upload error:", err);
-      // Fallback client indexing
-      const newDocs: DocumentItem[] = files.map((f) => {
-        const sizeMb = (f.size / (1024 * 1024)).toFixed(1);
-        return {
-          id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          name: f.name,
-          type: f.name.endsWith(".pdf") ? "pdf" : f.name.endsWith(".docx") ? "docx" : "txt",
-          pages: 1,
-          size: `${sizeMb} MB`,
-          collection: collectionName,
-          status: "ready",
-          addedAt: "Just now",
-        };
-      });
-
-      setDocuments((prev) => {
-        const updated = [...newDocs, ...prev];
-        localStorage.setItem("docmind_documents", JSON.stringify(updated));
-        return updated;
-      });
-      setSelectedDocNames((prev) => [...prev, ...files.map((f) => f.name)]);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const createCollection = (name: string, description: string) => {
-    const newCol: CollectionItem = {
-      id: `col-${Date.now()}`,
-      name,
-      description,
-      docCount: 0,
-      indexedCount: 0,
-      statusText: "0 indexed",
-      isPrivate: true,
-    };
-    setCollections((prev) => {
-      const updated = [...prev, newCol];
-      localStorage.setItem("docmind_collections", JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  const sendMessage = async (text: string) => {
-    const userMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      role: "user",
-      content: text,
-      selectedDocs: [...selectedDocNames],
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-
-    const history = messages.map((m) => ({ role: m.role, content: m.content }));
-    const apiRes = await askChat(text, sessionId, history);
-
-    const assistantMsg: ChatMessage = {
-      id: `msg-${Date.now() + 1}`,
-      role: "assistant",
-      content: apiRes.answer,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      groundingSources: apiRes.groundingSources || apiRes.citations?.length || (documents.length > 0 ? 1 : 0),
-      latency: apiRes.latency || "0.8s",
-      points:
-        apiRes.points && apiRes.points.length > 0
-          ? apiRes.points
-          : [
-              {
-                num: "01",
-                title: "Key observation",
-                body: apiRes.answer,
-                citationId: apiRes.citations && apiRes.citations.length > 0 ? 1 : undefined,
-              },
-            ],
-      citations: (apiRes.citations as InlineCitation[]) || [],
-    };
-
-    const finalMessages = [...newMessages, assistantMsg];
-    setMessages(finalMessages);
-    localStorage.setItem("docmind_messages", JSON.stringify(finalMessages));
-
-    if (apiRes.evidence) {
-      openEvidence(apiRes.evidence);
-    } else if (apiRes.citations && apiRes.citations.length > 0) {
-      const first = apiRes.citations[0];
-      openEvidence({
-        docTitle: first.docName.replace(/\.[^/.]+$/, ""),
-        heading: `Cited evidence from ${first.docName}`,
-        fullText: first.fullSnippet || first.highlightText,
-        highlightSnippet: first.highlightText,
-        page: parseInt(first.pages.replace(/\D/g, "")) || 1,
-      });
-    }
+  const clearNotices = () => {
+    setStatusError(null);
+    setWorkspaceNotice(null);
   };
 
   return (
     <DocContext.Provider
       value={{
+        selectedFiles,
         documents,
-        collections,
+        totalPages,
+        passageCount,
+        previewPages,
         messages,
-        selectedDocNames,
-        activeEvidence,
-        isEvidenceOpen,
-        isUploading,
+        consent,
         sessionId,
-        uploadQueue,
-        storageUsedMb,
-        toggleSelectDoc,
-        clearSelectedDocs,
+        indexed,
+        providerChanged,
+        cleanupBlocked,
+        savedWorkspaceId,
+        workspaces,
+        chatSaveError,
+        workspaceNotice,
+        statusError,
+        isPreviewing,
+        isIndexing,
+        isAsking,
+        isResetting,
+        isWorkspaceBusy,
+        activeSources,
+        activeSourceIndex,
+        isEvidenceOpen,
+        setConsent,
+        selectFiles,
+        runPreview,
+        runIndex,
+        sendQuestion,
+        clearChatOnly,
+        downloadChat,
+        resetWorkspace,
+        refreshWorkspaces,
+        saveNewWorkspace,
+        openSavedWorkspace,
+        retrySaveChat,
+        deleteSavedWorkspace,
         openEvidence,
         closeEvidence,
-        sendMessage,
-        startNewChat,
-        uploadRealFiles,
-        createCollection,
+        clearNotices,
       }}
     >
       {children}
@@ -339,9 +677,9 @@ export function DocProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useDocs() {
-  const context = useContext(DocContext);
-  if (!context) {
-    throw new Error("useDocs must be used within a DocProvider");
+  const ctx = useContext(DocContext);
+  if (!ctx) {
+    throw new Error("useDocs must be used within DocProvider");
   }
-  return context;
+  return ctx;
 }
