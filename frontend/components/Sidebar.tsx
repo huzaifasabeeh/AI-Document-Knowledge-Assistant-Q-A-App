@@ -60,6 +60,7 @@ export function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarProps) {
   const [workspaceTitle, setWorkspaceTitle] = useState("");
   const [chosenWorkspaceId, setChosenWorkspaceId] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const blocked = cleanupBlocked || providerChanged;
   const uploadDisabled = indexed || blocked || Boolean(savedWorkspaceId);
@@ -81,8 +82,14 @@ export function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarProps) {
     !isWorkspaceBusy;
 
   const handleLogout = async () => {
-    await logout();
-    router.replace("/login");
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      router.replace("/login");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const handleSaveWorkspace = async (e: React.FormEvent) => {
@@ -419,10 +426,11 @@ export function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarProps) {
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-[#E5EBE8] dark:border-[#26483F] bg-white dark:bg-[#172E29] hover:bg-[#F6F8F7] dark:hover:bg-[#1C3831] text-xs font-medium text-[#172B28] dark:text-[#F2F7F5] transition-colors"
+          disabled={isLoggingOut}
+          className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-[#E5EBE8] dark:border-[#26483F] bg-white dark:bg-[#172E29] hover:bg-[#F6F8F7] dark:hover:bg-[#1C3831] disabled:opacity-50 text-xs font-medium text-[#172B28] dark:text-[#F2F7F5] transition-colors"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Log out</span>
+          <span>{isLoggingOut ? "Logging out…" : "Log out"}</span>
         </button>
       </div>
     </aside>

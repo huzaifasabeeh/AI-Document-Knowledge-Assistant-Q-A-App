@@ -38,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [healthError, setHealthError] = useState<string | null>(null);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isLoggingOutRef = React.useRef(false);
 
   const clearClientStorage = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -151,10 +152,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async (): Promise<string> => {
+    if (isLoggingOutRef.current) {
+      return "Signing out…";
+    }
+    isLoggingOutRef.current = true;
     const currentToken = token;
     clearClientStorage();
-    setUser(null);
-    setToken(null);
 
     let notice = "You have been signed out.";
     if (currentToken) {
@@ -165,7 +168,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         notice = "Signed out locally. Remote sign-out could not be confirmed.";
       }
     }
+    // Clear auth state after the logout request settles so AuthGuard/router
+    // does not navigate away and abort POST /api/auth/logout in flight.
+    setUser(null);
+    setToken(null);
     setAuthNotice(notice);
+    isLoggingOutRef.current = false;
     return notice;
   };
 
